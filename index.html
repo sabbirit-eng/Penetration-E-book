@@ -1,0 +1,2991 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Penetration Testing For Professionals — বাংলা হ্যান্ডবুক</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117;
+  --bg2: #161b22;
+  --bg3: #1c2128;
+  --bg4: #21262d;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --accent: #58a6ff;
+  --accent2: #1f6feb;
+  --green: #3fb950;
+  --green-bg: rgba(63,185,80,0.1);
+  --yellow: #d29922;
+  --yellow-bg: rgba(210,153,34,0.12);
+  --red: #f85149;
+  --red-bg: rgba(248,81,73,0.1);
+  --purple: #bc8cff;
+  --purple-bg: rgba(188,140,255,0.1);
+  --cyan: #39d0d8;
+  --cyan-bg: rgba(57,208,216,0.1);
+  --orange: #f0883e;
+  --orange-bg: rgba(240,136,62,0.1);
+  --highlight-yellow: rgba(255,235,59,0.25);
+  --highlight-green: rgba(63,185,80,0.2);
+  --highlight-blue: rgba(88,166,255,0.2);
+  --highlight-pink: rgba(255,105,180,0.2);
+  --sidebar-w: 280px;
+  --topbar-h: 56px;
+  --font-bn: 'Hind Siliguri', 'Inter', sans-serif;
+  --font-en: 'Inter', sans-serif;
+  --font-code: 'JetBrains Mono', monospace;
+}
+[data-theme="light"] {
+  --bg: #ffffff;
+  --bg2: #f6f8fa;
+  --bg3: #eaeef2;
+  --bg4: #d0d7de;
+  --border: #d0d7de;
+  --text: #1f2328;
+  --text2: #57606a;
+  --text3: #8c959f;
+  --accent: #0969da;
+  --accent2: #0550ae;
+  --green: #1a7f37;
+  --green-bg: rgba(26,127,55,0.1);
+  --yellow: #9a6700;
+  --yellow-bg: rgba(154,103,0,0.1);
+  --red: #cf222e;
+  --red-bg: rgba(207,34,46,0.1);
+  --purple: #8250df;
+  --purple-bg: rgba(130,80,223,0.1);
+  --cyan: #0550ae;
+  --cyan-bg: rgba(5,80,174,0.1);
+  --orange: #bc4c00;
+  --orange-bg: rgba(188,76,0,0.1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-bn); }
+::selection { background: var(--highlight-yellow); color: var(--text); }
+
+/* ── TOPBAR ── */
+#topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: var(--topbar-h);
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px; padding: 0 16px;
+}
+#topbar .logo {
+  font-family: var(--font-en); font-weight: 700; font-size: 13px;
+  color: var(--accent); letter-spacing: -0.3px; white-space: nowrap;
+  display: flex; align-items: center; gap: 8px;
+}
+#topbar .logo-icon { font-size: 20px; }
+#topbar .divider { width: 1px; height: 24px; background: var(--border); }
+#topbar .tools { display: flex; align-items: center; gap: 4px; flex: 1; }
+.tool-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--bg3); color: var(--text2); cursor: pointer;
+  font-size: 12px; font-family: var(--font-en); font-weight: 500;
+  transition: all 0.15s; white-space: nowrap;
+}
+.tool-btn:hover { background: var(--bg4); color: var(--text); border-color: var(--accent); }
+.tool-btn.active { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+.tool-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+#topbar .right-tools { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+#font-size-display { font-size: 12px; color: var(--text2); min-width: 28px; text-align: center; font-family: var(--font-en); }
+#progress-bar {
+  position: fixed; top: var(--topbar-h); left: 0; right: 0; z-index: 99;
+  height: 3px; background: var(--border);
+}
+#progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.1s; }
+
+/* ── LAYOUT ── */
+#layout { display: flex; margin-top: calc(var(--topbar-h) + 3px); min-height: calc(100vh - var(--topbar-h) - 3px); }
+
+/* ── SIDEBAR ── */
+#sidebar {
+  width: var(--sidebar-w); flex-shrink: 0;
+  background: var(--bg2); border-right: 1px solid var(--border);
+  position: fixed; top: calc(var(--topbar-h) + 3px); bottom: 0; left: 0;
+  overflow-y: auto; overflow-x: hidden;
+  transition: transform 0.25s; z-index: 50;
+  display: flex; flex-direction: column;
+}
+#sidebar.collapsed { transform: translateX(calc(-1 * var(--sidebar-w))); }
+#sidebar-header {
+  padding: 14px 16px 10px; border-bottom: 1px solid var(--border);
+  font-size: 10px; font-weight: 700; color: var(--text3);
+  letter-spacing: 0.08em; font-family: var(--font-en); text-transform: uppercase;
+}
+.nav-section { padding: 8px 0; }
+.nav-section-title {
+  padding: 6px 16px; font-size: 10px; font-weight: 700;
+  color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em;
+  font-family: var(--font-en);
+}
+.nav-item {
+  display: block; padding: 6px 16px 6px 20px;
+  font-size: 12.5px; color: var(--text2); cursor: pointer;
+  transition: all 0.12s; text-decoration: none; line-height: 1.4;
+  border-left: 2px solid transparent; font-family: var(--font-bn);
+}
+.nav-item:hover { background: var(--bg3); color: var(--text); border-left-color: var(--border); }
+.nav-item.active { background: var(--bg3); color: var(--accent); border-left-color: var(--accent); font-weight: 500; }
+.nav-item.chapter-title {
+  padding-left: 16px; font-weight: 600; font-size: 12px;
+  color: var(--text); font-family: var(--font-en);
+}
+.nav-item.chapter-title:hover { color: var(--accent); }
+.nav-sub { padding-left: 28px; font-size: 12px; color: var(--text3); }
+.nav-sub.active { color: var(--accent); }
+
+/* ── MAIN CONTENT ── */
+#main {
+  flex: 1; margin-left: var(--sidebar-w);
+  padding: 0; transition: margin-left 0.25s;
+  max-width: 100%;
+}
+#main.expanded { margin-left: 0; }
+#content-area { max-width: 820px; margin: 0 auto; padding: 48px 40px 120px; }
+
+/* ── TYPOGRAPHY ── */
+.chapter-eyebrow {
+  font-family: var(--font-en); font-size: 11px; font-weight: 700;
+  color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+.chapter-eyebrow::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+h1.chapter-title-main {
+  font-size: 2rem; font-weight: 700; line-height: 1.2;
+  color: var(--text); margin-bottom: 8px;
+  font-family: var(--font-en);
+}
+h1.chapter-title-bn {
+  font-size: 1.4rem; font-weight: 500; color: var(--text2);
+  margin-bottom: 32px; font-family: var(--font-bn);
+}
+h2.section-title {
+  font-size: 1.25rem; font-weight: 700; color: var(--text);
+  margin: 44px 0 16px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border); font-family: var(--font-en);
+  scroll-margin-top: 80px;
+}
+h3.sub-title {
+  font-size: 1rem; font-weight: 600; color: var(--accent);
+  margin: 28px 0 12px; font-family: var(--font-bn);
+}
+p { font-size: 15px; line-height: 1.8; color: var(--text); margin-bottom: 14px; }
+p .en { font-family: var(--font-en); font-style: italic; }
+strong { color: var(--text); font-weight: 600; }
+
+/* ── CODE BLOCKS ── */
+.code-block {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; margin: 20px 0; overflow: hidden;
+}
+.code-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 14px; background: var(--bg3); border-bottom: 1px solid var(--border);
+}
+.code-lang { font-size: 11px; font-weight: 700; color: var(--text3); font-family: var(--font-en); text-transform: uppercase; letter-spacing: 0.06em; }
+.code-copy {
+  font-size: 11px; color: var(--text3); cursor: pointer; padding: 3px 8px;
+  border-radius: 4px; border: 1px solid var(--border); background: transparent;
+  font-family: var(--font-en); transition: all 0.15s;
+}
+.code-copy:hover { background: var(--bg4); color: var(--accent); border-color: var(--accent); }
+.code-copy.copied { color: var(--green); border-color: var(--green); }
+pre { margin: 0; padding: 18px; overflow-x: auto; }
+code { font-family: var(--font-code); font-size: 13px; line-height: 1.7; color: #e6edf3; }
+.kw { color: #ff7b72; } .str { color: #a5d6ff; } .cm { color: #8b949e; font-style: italic; }
+.fn { color: #d2a8ff; } .num { color: #79c0ff; } .op { color: #ff7b72; }
+
+/* ── CALLOUTS ── */
+.callout {
+  border-radius: 8px; padding: 14px 16px; margin: 20px 0;
+  border: 1px solid; display: flex; gap: 12px; align-items: flex-start;
+}
+.callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.callout-body { flex: 1; }
+.callout-title { font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; font-family: var(--font-en); }
+.callout-text { font-size: 14px; line-height: 1.7; }
+.callout.warning { background: var(--red-bg); border-color: var(--red); }
+.callout.warning .callout-title { color: var(--red); }
+.callout.note { background: var(--yellow-bg); border-color: var(--yellow); }
+.callout.note .callout-title { color: var(--yellow); }
+.callout.tip { background: var(--green-bg); border-color: var(--green); }
+.callout.tip .callout-title { color: var(--green); }
+.callout.lab { background: var(--purple-bg); border-color: var(--purple); }
+.callout.lab .callout-title { color: var(--purple); }
+.callout.info { background: var(--cyan-bg); border-color: var(--cyan); }
+.callout.info .callout-title { color: var(--cyan); }
+
+/* ── TABLES ── */
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: 8px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th { background: var(--bg3); color: var(--text2); font-weight: 600; padding: 10px 14px; text-align: left; font-family: var(--font-en); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text); line-height: 1.5; vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg3); }
+
+/* ── HIGHLIGHT TOOL ── */
+.highlighted-yellow { background: var(--highlight-yellow); border-radius: 2px; padding: 0 2px; cursor: pointer; position: relative; }
+.highlighted-green { background: var(--highlight-green); border-radius: 2px; padding: 0 2px; cursor: pointer; }
+.highlighted-blue { background: var(--highlight-blue); border-radius: 2px; padding: 0 2px; cursor: pointer; }
+.highlighted-pink { background: var(--highlight-pink); border-radius: 2px; padding: 0 2px; cursor: pointer; }
+.highlight-tooltip {
+  position: fixed; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px; display: flex; gap: 4px; z-index: 200;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: none;
+}
+.hl-color { width: 22px; height: 22px; border-radius: 4px; cursor: pointer; border: 2px solid transparent; transition: all 0.12s; }
+.hl-color:hover { transform: scale(1.15); border-color: var(--text); }
+.hl-erase { font-size: 12px; padding: 3px 6px; background: var(--bg4); color: var(--text2); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-family: var(--font-en); }
+.hl-erase:hover { color: var(--red); border-color: var(--red); }
+
+/* ── NOTES PANEL ── */
+#notes-panel {
+  position: fixed; right: 0; top: calc(var(--topbar-h) + 3px); bottom: 0;
+  width: 300px; background: var(--bg2); border-left: 1px solid var(--border);
+  z-index: 60; transform: translateX(100%); transition: transform 0.25s;
+  display: flex; flex-direction: column;
+}
+#notes-panel.open { transform: translateX(0); }
+#notes-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+#notes-header h3 { font-size: 13px; font-weight: 700; color: var(--text); font-family: var(--font-en); }
+#notes-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.note-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.note-item-text { font-size: 12.5px; color: var(--text); line-height: 1.6; margin-bottom: 6px; }
+.note-item-ref { font-size: 10px; color: var(--text3); font-family: var(--font-en); margin-bottom: 6px; }
+.note-item-del { font-size: 11px; color: var(--red); cursor: pointer; }
+.note-item-del:hover { text-decoration: underline; }
+#note-input-area { padding: 12px; border-top: 1px solid var(--border); }
+#note-input { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 10px; font-size: 13px; font-family: var(--font-bn); resize: vertical; min-height: 70px; outline: none; }
+#note-input:focus { border-color: var(--accent); }
+#note-save { width: 100%; margin-top: 8px; padding: 8px; background: var(--accent2); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; font-family: var(--font-bn); }
+#note-save:hover { background: var(--accent); }
+.no-notes { text-align: center; color: var(--text3); font-size: 13px; padding: 20px; font-family: var(--font-bn); }
+
+/* ── BOOKMARK ── */
+.bookmark-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--text3); cursor: pointer;
+  padding: 3px 7px; border-radius: 4px; border: 1px solid transparent;
+  transition: all 0.12s; font-family: var(--font-en); margin-left: 8px;
+  vertical-align: middle;
+}
+.bookmark-btn:hover { color: var(--yellow); border-color: var(--yellow); }
+.bookmark-btn.bookmarked { color: var(--yellow); border-color: var(--yellow); background: var(--yellow-bg); }
+#bookmarks-panel {
+  position: fixed; right: 0; top: calc(var(--topbar-h) + 3px); bottom: 0;
+  width: 300px; background: var(--bg2); border-left: 1px solid var(--border);
+  z-index: 60; transform: translateX(100%); transition: transform 0.25s;
+  display: flex; flex-direction: column;
+}
+#bookmarks-panel.open { transform: translateX(0); }
+.bm-item { padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.bm-item:hover { background: var(--bg3); }
+.bm-item-title { font-size: 13px; color: var(--text); margin-bottom: 3px; }
+.bm-item-loc { font-size: 11px; color: var(--text3); font-family: var(--font-en); }
+
+/* ── SEARCH ── */
+#search-box {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.95);
+  width: 580px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; z-index: 300; display: none; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden;
+}
+#search-box.open { display: flex; transform: translate(-50%,-50%) scale(1); }
+#search-input {
+  padding: 16px 20px; font-size: 16px; background: transparent; border: none;
+  color: var(--text); outline: none; font-family: var(--font-bn); border-bottom: 1px solid var(--border);
+}
+#search-results { max-height: 360px; overflow-y: auto; }
+.search-result-item { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid var(--border); }
+.search-result-item:hover { background: var(--bg3); }
+.search-result-title { font-size: 14px; color: var(--text); margin-bottom: 4px; }
+.search-result-snippet { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.search-result-snippet mark { background: var(--highlight-yellow); color: var(--text); border-radius: 2px; }
+#search-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 299; display: none; }
+#search-overlay.open { display: block; }
+#search-empty { padding: 24px; text-align: center; color: var(--text3); font-size: 13px; }
+
+/* ── READING MODE ── */
+body.reading-mode #sidebar { transform: translateX(calc(-1 * var(--sidebar-w))); }
+body.reading-mode #main { margin-left: 0; }
+body.reading-mode #notes-panel { display: none; }
+
+/* ── FOCUS MODE ── */
+body.focus-mode .focus-dim { opacity: 0.18; transition: opacity 0.2s; }
+body.focus-mode .focus-bright { opacity: 1 !important; transition: opacity 0.1s; }
+body.focus-mode #content-area h2, body.focus-mode #content-area h3,
+body.focus-mode #content-area .callout, body.focus-mode #content-area .code-block,
+body.focus-mode #content-area .table-wrap, body.focus-mode #content-area .ascii-box { opacity: 0.6; transition: opacity 0.2s; }
+body.focus-mode #content-area h2:hover, body.focus-mode #content-area h3:hover,
+body.focus-mode #content-area .callout:hover, body.focus-mode #content-area .code-block:hover,
+body.focus-mode #content-area .table-wrap:hover, body.focus-mode #content-area .ascii-box:hover { opacity: 1; }
+
+/* ── SECTION COMPLETE BTN ── */
+.section-complete-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; color: var(--text3); cursor: pointer;
+  padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border);
+  background: transparent; transition: all 0.15s;
+  font-family: var(--font-en); margin-left: 8px; vertical-align: middle;
+}
+.section-complete-btn:hover { color: var(--green); border-color: var(--green); }
+.section-complete-btn.done { color: var(--green); border-color: var(--green); background: var(--green-bg); }
+
+/* ── PROGRESS BADGE ── */
+#progress-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--accent2); color: #fff; border-radius: 12px;
+  font-size: 11px; font-weight: 700; padding: 2px 8px;
+  font-family: var(--font-en); min-width: 36px;
+}
+
+/* ── ASCII DIAGRAM ── */
+.ascii-box {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 20px; margin: 20px 0; overflow-x: auto;
+}
+.ascii-box pre { font-family: var(--font-code); font-size: 12px; line-height: 1.5; color: var(--text2); }
+
+/* ── CHAPTER NAV ── */
+.chapter-nav { display: flex; justify-content: space-between; margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border); gap: 16px; }
+.chapter-nav-btn {
+  flex: 1; padding: 14px 20px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; cursor: pointer; transition: all 0.15s; text-align: left;
+  color: var(--text2); font-family: var(--font-bn);
+}
+.chapter-nav-btn:hover { background: var(--bg3); border-color: var(--accent); color: var(--text); }
+.chapter-nav-btn.next { text-align: right; }
+.chapter-nav-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 4px; font-family: var(--font-en); }
+.chapter-nav-title { font-size: 13px; font-weight: 600; }
+
+/* ── SCROLL TO TOP ── */
+#scroll-top {
+  position: fixed; bottom: 24px; right: 24px; width: 40px; height: 40px;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  opacity: 0; transition: all 0.2s; z-index: 50; color: var(--text2);
+}
+#scroll-top.visible { opacity: 1; }
+#scroll-top:hover { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+
+/* ── SECTION DIVIDER ── */
+.section-divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+/* ── CHAPTER INTRO CARD ── */
+.chapter-intro-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+  padding: 24px; margin-bottom: 40px;
+}
+.chapter-intro-card .cic-label { font-size: 11px; color: var(--text3); font-family: var(--font-en); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+.chapter-intro-card .cic-topics { display: flex; flex-wrap: wrap; gap: 6px; }
+.cic-topic { font-size: 12px; padding: 4px 10px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; color: var(--text2); font-family: var(--font-en); cursor: pointer; transition: all 0.12s; }
+.cic-topic:hover { border-color: var(--accent); color: var(--accent); background: var(--cyan-bg); }
+
+/* ── COMPARISON TABLE SPECIAL ── */
+.vs-yes { color: var(--green); font-weight: 600; }
+.vs-no { color: var(--red); font-weight: 600; }
+.vs-partial { color: var(--yellow); font-weight: 600; }
+
+/* ── TAG BADGES ── */
+.badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; font-family: var(--font-en); letter-spacing: 0.04em; text-transform: uppercase; }
+.badge-critical { background: var(--red-bg); color: var(--red); border: 1px solid var(--red); }
+.badge-high { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange); }
+.badge-medium { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow); }
+.badge-low { background: var(--green-bg); color: var(--green); border: 1px solid var(--green); }
+.badge-info { background: var(--cyan-bg); color: var(--cyan); border: 1px solid var(--cyan); }
+
+/* ── CHECKLIST ── */
+.checklist { list-style: none; margin: 12px 0; }
+.checklist li { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; font-size: 14px; line-height: 1.6; }
+.cl-check { width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-top: 2px; transition: all 0.15s; }
+.cl-check.checked { background: var(--green); border-color: var(--green); }
+.cl-check.checked::after { content: '✓'; color: #fff; font-size: 11px; font-weight: 700; }
+.checklist li.checked-item .cl-text { text-decoration: line-through; color: var(--text3); }
+
+/* ── TOC PAGE ── */
+.toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0; }
+.toc-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; cursor: pointer; transition: all 0.15s; }
+.toc-card:hover { border-color: var(--accent); background: var(--bg3); }
+.toc-card-num { font-size: 11px; color: var(--text3); font-family: var(--font-en); font-weight: 700; margin-bottom: 6px; }
+.toc-card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; font-family: var(--font-en); }
+.toc-card-bn { font-size: 12px; color: var(--text2); }
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  #sidebar { transform: translateX(calc(-1 * var(--sidebar-w))); }
+  #sidebar.mobile-open { transform: translateX(0); }
+  #main { margin-left: 0; }
+  #content-area { padding: 32px 20px 100px; }
+  h1.chapter-title-main { font-size: 1.6rem; }
+  #search-box { width: 90%; }
+  .toc-grid { grid-template-columns: 1fr; }
+  .tool-btn span { display: none; }
+}
+
+/* ── SMOOTH SCROLL ── */
+html { scroll-behavior: smooth; }
+
+/* ── PRINT ── */
+@media print {
+  #topbar, #sidebar, #notes-panel, #bookmarks-panel, #scroll-top { display: none !important; }
+  #main { margin-left: 0 !important; }
+  #content-area { padding: 20px !important; }
+}
+
+/* fade-in for sections */
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+
+<!-- HIGHLIGHT TOOLTIP -->
+<div class="highlight-tooltip" id="hl-tooltip">
+  <div class="hl-color" style="background:#fff59d" onclick="applyHighlight('yellow')" title="Yellow"></div>
+  <div class="hl-color" style="background:#a5d6a7" onclick="applyHighlight('green')" title="Green"></div>
+  <div class="hl-color" style="background:#90caf9" onclick="applyHighlight('blue')" title="Blue"></div>
+  <div class="hl-color" style="background:#f48fb1" onclick="applyHighlight('pink')" title="Pink"></div>
+  <button class="hl-erase" onclick="eraseHighlight()">✕ Remove</button>
+</div>
+
+<!-- SEARCH OVERLAY -->
+<div id="search-overlay" onclick="closeSearch()"></div>
+<div id="search-box">
+  <input id="search-input" placeholder="সার্চ করুন... (Search content)" oninput="doSearch(this.value)">
+  <div id="search-results"><div id="search-empty">কিছু টাইপ করুন...</div></div>
+</div>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="logo">
+    <span class="logo-icon">⚡</span>
+    <span>PenTest Handbook</span>
+  </div>
+  <div class="divider"></div>
+  <div class="tools">
+    <button class="tool-btn" id="btn-sidebar" onclick="toggleSidebar()" title="Toggle Sidebar">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 2.75A.75.75 0 011.75 2h12.5a.75.75 0 010 1.5H1.75A.75.75 0 011 2.75zm0 5A.75.75 0 011.75 7h12.5a.75.75 0 010 1.5H1.75A.75.75 0 011 7.75zm0 5a.75.75 0 01.75-.75h12.5a.75.75 0 010 1.5H1.75a.75.75 0 01-.75-.75z"/></svg>
+      <span>Contents</span>
+    </button>
+    <button class="tool-btn" id="btn-highlight" onclick="toggleHighlightMode()">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.368 5.011L9.81 9.88l-1.56 1.12L4.81 6.13zm5.014 7.508l-1.56 1.12L6.38 8.77l1.56-1.12zM2 13h5l-1-3H3z"/></svg>
+      <span>Highlight</span>
+    </button>
+    <button class="tool-btn" id="btn-notes" onclick="toggleNotes()">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 1A1.5 1.5 0 001 2.5v11A1.5 1.5 0 002.5 15h11a1.5 1.5 0 001.5-1.5v-11A1.5 1.5 0 0013.5 1h-11zM2 2.5a.5.5 0 01.5-.5h11a.5.5 0 01.5.5v11a.5.5 0 01-.5.5h-11a.5.5 0 01-.5-.5v-11zM4 5.75a.75.75 0 01.75-.75h6.5a.75.75 0 010 1.5h-6.5A.75.75 0 014 5.75zm0 3a.75.75 0 01.75-.75h6.5a.75.75 0 010 1.5h-6.5A.75.75 0 014 8.75zm0 3a.75.75 0 01.75-.75h4.5a.75.75 0 010 1.5h-4.5A.75.75 0 014 11.75z"/></svg>
+      <span>Notes</span>
+    </button>
+    <button class="tool-btn" id="btn-bookmarks" onclick="toggleBookmarks()">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.75 1A1.75 1.75 0 003 2.75v11.5c0 .649.392 1.231.966 1.495a1.75 1.75 0 001.92-.34L8 13.316l2.114 2.09a1.75 1.75 0 001.92.34A1.75 1.75 0 0013 14.25V2.75A1.75 1.75 0 0011.25 1H4.75z"/></svg>
+      <span>Bookmarks</span>
+    </button>
+    <button class="tool-btn" onclick="openSearch()">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M10.68 11.74a6 6 0 01-7.922-8.982 6 6 0 018.982 7.922l3.04 3.04a.749.749 0 01-.326 1.275.749.749 0 01-.734-.215l-3.04-3.04zM11.5 7a4.499 4.499 0 11-8.997 0A4.499 4.499 0 0111.5 7z"/></svg>
+      <span>Search</span>
+    </button>
+    <button class="tool-btn" id="btn-progress" onclick="toggleProgressPanel()">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1.75a.75.75 0 00-1.5 0v12.5c0 .414.336.75.75.75h13.5a.75.75 0 000-1.5H1.5V1.75zm5.09 7.498a.75.75 0 01.02-1.06l4.5-4.25a.75.75 0 011.04 1.08l-3.96 3.739 1.857 1.856a.75.75 0 11-1.06 1.061l-2.397-2.396z"/></svg>
+      <span>Progress</span>
+    </button>
+    <span id="progress-badge">0%</span>
+  </div>
+  <div class="right-tools">
+    <button class="tool-btn" onclick="changeFontSize(-1)" title="Decrease font">A−</button>
+    <span id="font-size-display">15</span>
+    <button class="tool-btn" onclick="changeFontSize(1)" title="Increase font">A+</button>
+    <button class="tool-btn" id="btn-theme" onclick="toggleTheme()">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zM2 8a6 6 0 1112 0A6 6 0 012 8z"/><path d="M8 2v12a6 6 0 000-12z"/></svg>
+      <span>Theme</span>
+    </button>
+    <button class="tool-btn" id="btn-focus" onclick="toggleFocus()">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1h3.25a.75.75 0 010 1.5H2.5V5.5a.75.75 0 01-1.5 0V1.75A.75.75 0 011.5 1zM11.25 1h3.25a.75.75 0 01.75.75V5.5a.75.75 0 01-1.5 0V2.5h-2.5a.75.75 0 010-1.5zM1.75 10.5a.75.75 0 01.75.75V14h2.5a.75.75 0 010 1.5H1.5a.75.75 0 01-.75-.75V11.25a.75.75 0 01.75-.75zm12.5 0a.75.75 0 01.75.75V14.75a.75.75 0 01-.75.75H11.25a.75.75 0 010-1.5h2.5v-2.75a.75.75 0 01.75-.75z"/></svg>
+      <span>Focus</span>
+    </button>
+  </div>
+</div>
+<div id="progress-bar"><div id="progress-fill"></div></div>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div id="sidebar-header">📖 Table of Contents</div>
+  <div class="nav-section">
+    <div class="nav-item chapter-title" onclick="showPage('front')">📋 Front Matter</div>
+    <div class="nav-item nav-sub" onclick="showPage('front')">ভূমিকা · Lab Setup</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Chapter 1</div>
+    <div class="nav-item chapter-title" onclick="showPage('ch1')">Introduction to Pentest</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch1'); scrollTo('s1-1')">1.1 What is Penetration Testing</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch1'); scrollTo('s1-2')">1.2 Benefits</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch1'); scrollTo('s1-3')">1.3 Delivery Models</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch1'); scrollTo('s1-4')">1.4 ROI Calculation</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch1'); scrollTo('s1-5')">1.5 Assessment Types</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch1'); scrollTo('s1-6')">1.6 Strategies</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch1'); scrollTo('s1-7')">1.7 Cost & Scope</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch1'); scrollTo('s1-8')">1.8 Auto vs Manual</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch1'); scrollTo('s1-9')">1.9 Common Areas</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch1'); scrollTo('s1-10')">1.10 Process</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch1'); scrollTo('s1-11')">1.11 Phases</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch1'); scrollTo('s1-12')">1.12 Methodologies</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch1'); scrollTo('s1-13')">1.13 When to Test</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch1'); scrollTo('s1-14')">1.14 Ethics</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch1'); scrollTo('s1-15')">1.15 Qualifications</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch1'); scrollTo('s1-16')">1.16 Risks</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Chapter 2</div>
+    <div class="nav-item chapter-title" onclick="showPage('ch2')">Laws & Regulations</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch2'); scrollTo('s2-1')">2.1 Bangladesh</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch2'); scrollTo('s2-2')">2.2 United States</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch2'); scrollTo('s2-3')">2.3 EU — GDPR</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch2'); scrollTo('s2-4')">2.4 UK GDPR & DPA</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch2'); scrollTo('s2-5')">2.5 India — DPDP Act</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch2'); scrollTo('s2-6')">2.6 China — PIPL/CSL</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Chapter 3</div>
+    <div class="nav-item chapter-title" onclick="showPage('ch3')">Scope &amp; Engagement</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-1')">3.1 Pre-engagement Activities</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-2')">3.2 Proposal &amp; RFP</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-3')">3.3 Scoping Meeting</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-4')">3.4 Questionnaires</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-5')">3.5 Assessment Types</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-6')">3.6 Testing Strategy</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-7')">3.7 Infrastructure Areas</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-8')">3.8 Out-of-Scope</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-9')">3.9 Deliverables</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-10')">3.10 Reports</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-11')">3.11 Test Duration</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-12')">3.12 Team Staffing</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-13')">3.13 Cost Estimation</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-14')">3.14 Proposal Submission</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-15')">3.15 Brainstorming / TMTT</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-16')">3.16 Communication Lines</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-17')">3.17 Teleconference / TPC</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-18')">3.18 Project Timeline</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-19')">3.19 Meeting Frequency</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-20')">3.20 Time of Day</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-21')">3.21 Support Personnel</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-22')">3.22 ROE Documents</div>
+    <div class="nav-item nav-sub" onclick="showPage('ch3'); scrollTo('s3-23')">3.23 Engagement Letter</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Coming Soon</div>
+    <div class="nav-item nav-sub" style="opacity:0.4">Chapter 4 — Legal Issues</div>
+    <div class="nav-item nav-sub" style="opacity:0.4">Chapter 5 — Preparation</div>
+    <div class="nav-item nav-sub" style="opacity:0.4">...and 14 more chapters</div>
+  </div>
+</div>
+
+<!-- NOTES PANEL -->
+<div id="notes-panel">
+  <div id="notes-header">
+    <h3>📝 আমার নোটস</h3>
+    <button class="tool-btn" onclick="toggleNotes()">✕</button>
+  </div>
+  <div id="notes-list"><div class="no-notes">এখনো কোনো নোট নেই।<br>টেক্সট সিলেক্ট করে নোট যোগ করুন।</div></div>
+  <div id="note-input-area">
+    <textarea id="note-input" placeholder="নতুন নোট লিখুন..."></textarea>
+    <button id="note-save" onclick="saveManualNote()">নোট সেভ করুন</button>
+  </div>
+</div>
+
+<!-- BOOKMARKS PANEL -->
+<div id="bookmarks-panel">
+  <div id="notes-header">
+    <h3>🔖 Bookmarks</h3>
+    <button class="tool-btn" onclick="toggleBookmarks()">✕</button>
+  </div>
+  <div id="bookmarks-list"><div class="no-notes">কোনো bookmark নেই।<br>Section heading-এর পাশে 🔖 ক্লিক করুন।</div></div>
+</div>
+
+<!-- SCROLL TO TOP -->
+<div id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.75a.75.75 0 01.75.75v8.19l3.22-3.22a.75.75 0 111.06 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 111.06-1.06L7.25 10.69V2.5A.75.75 0 018 1.75z" transform="rotate(180 8 8)"/></svg>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div id="layout">
+  <div id="main">
+    <div id="content-area">
+
+<!-- ══════════════════ FRONT MATTER PAGE ══════════════════ -->
+<div id="page-front" class="page active">
+  <div class="chapter-eyebrow">Penetration Testing For Professionals · বাংলা হ্যান্ডবুক</div>
+  <h1 class="chapter-title-main">⚡ Penetration Testing<br>For Professionals</h1>
+  <h1 class="chapter-title-bn">একটি বাংলা প্র্যাকটিক্যাল হ্যান্ডবুক</h1>
+
+  <div class="chapter-intro-card">
+    <div class="cic-label">এই বইতে যা পাবে</div>
+    <div class="cic-topics">
+      <span class="cic-topic">Network Pentesting</span>
+      <span class="cic-topic">Web App Security</span>
+      <span class="cic-topic">Active Directory</span>
+      <span class="cic-topic">Privilege Escalation</span>
+      <span class="cic-topic">Social Engineering</span>
+      <span class="cic-topic">Cloud Security</span>
+      <span class="cic-topic">Password Attacks</span>
+      <span class="cic-topic">Report Writing</span>
+      <span class="cic-topic">Legal & Compliance</span>
+      <span class="cic-topic">Real-World Labs</span>
+    </div>
+  </div>
+
+  <h2 class="section-title" id="preface">ভূমিকা — Preface <button class="bookmark-btn" onclick="addBookmark('preface','ভূমিকা')">🔖</button> <button class="section-complete-btn" data-sid="preface" onclick="toggleSection('preface')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Penetration testing — এই কাজটা শুধু tool চালানো না। এটা একটা <strong>mindset।</strong></p>
+  <p>একজন skilled pentester যখন কোনো network বা application-এর সামনে দাঁড়ায়, তখন সে চিন্তা করে একজন attacker-এর মতো — কিন্তু কাজ করে একজন defender-এর স্বার্থে। এই দুটো দৃষ্টিভঙ্গির মাঝখানে দাঁড়িয়ে থাকাটাই penetration testing-এর মূল শিল্প।</p>
+  <div class="callout note">
+    <div class="callout-icon">📌</div>
+    <div class="callout-body">
+      <div class="callout-title">এই বই কাদের জন্য</div>
+      <div class="callout-text">✅ যারা ethical hacking শিখতে শুরু করেছে &nbsp;|&nbsp; ✅ OSCP / CEH / CPTS দিতে চাইছে &nbsp;|&nbsp; ✅ Junior pentesters যারা skills sharpen করতে চাইছে &nbsp;|&nbsp; ✅ Bug bounty hunters</div>
+    </div>
+  </div>
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <div class="callout-title">Legal Warning</div>
+      <div class="callout-text">এই বইয়ের সব technique শুধুমাত্র <strong>authorized environment-এ</strong> ব্যবহারের জন্য। Written permission ছাড়া কোনো system-এ এই techniques প্রয়োগ করা অবৈধ এবং দণ্ডনীয়।</div>
+    </div>
+  </div>
+
+  <h2 class="section-title" id="lab-setup">Lab Environment Setup <button class="bookmark-btn" onclick="addBookmark('lab-setup','Lab Setup Guide')">🔖</button> <button class="section-complete-btn" data-sid="lab-setup" onclick="toggleSection('lab-setup')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Penetration testing শেখার জন্য একটি controlled lab environment অপরিহার্য।</p>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>Component</th><th>Minimum</th><th>Recommended</th></tr>
+      <tr><td>RAM</td><td>16 GB</td><td>32 GB</td></tr>
+      <tr><td>Storage</td><td>256 GB SSD</td><td>500 GB NVMe</td></tr>
+      <tr><td>CPU</td><td>4-core (VT-x enabled)</td><td>8-core+</td></tr>
+      <tr><td>Network</td><td>Single NIC</td><td>Dual NIC</td></tr>
+      <tr><td>Hypervisor</td><td>VirtualBox (Free)</td><td>VMware Workstation</td></tr>
+    </table>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">bash — Kali Linux Initial Setup</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="cm"># Step 1: System update (Kali VM-এ প্রথম কাজ)</span>
+sudo apt update && sudo apt full-upgrade -y
+sudo apt autoremove -y
+
+<span class="cm"># Step 2: Essential tools install</span>
+sudo pip3 install impacket <span class="op">--</span>break-system-packages
+sudo apt install bloodhound seclists -y
+sudo gem install evil-winrm
+
+<span class="cm"># Step 3: Kerbrute install</span>
+wget https://github.com/ropnop/kerbrute/releases/latest/download/kerbrute_linux_amd64
+chmod +x kerbrute_linux_amd64 && sudo mv kerbrute_linux_amd64 /usr/local/bin/kerbrute
+
+<span class="cm"># Step 4: DVWA (practice web app)</span>
+sudo apt install docker.io -y
+sudo docker run -d -p 80:80 vulnerables/web-dvwa</code></pre>
+  </div>
+
+  <h3 class="sub-title">Lab Architecture</h3>
+  <div class="ascii-box"><pre>
+┌─────────────────────────────────────────────────────┐
+│              YOUR HOST MACHINE                      │
+│  ┌───────────────────────────────────────────────┐  │
+│  │         VIRTUALIZATION (VMware/VBox)          │  │
+│  │                                               │  │
+│  │  ┌────────────┐    ┌──────────────────────┐   │  │
+│  │  │ ATTACKER   │    │    TARGET VMs         │   │  │
+│  │  │            │    │                      │   │  │
+│  │  │ Kali Linux │◄──►│ • Metasploitable 2   │   │  │
+│  │  │ (Primary)  │    │ • Windows Server AD  │   │  │
+│  │  │            │    │ • DVWA (Web App)     │   │  │
+│  │  └────────────┘    └──────────────────────┘   │  │
+│  │                                               │  │
+│  │      [Internal NAT Network: 10.0.0.0/24]     │  │
+│  └───────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘</pre></div>
+
+  <h3 class="sub-title">Online Practice Platforms</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Platform</th><th>Best For</th><th>Cost</th></tr>
+      <tr><td><strong>TryHackMe</strong></td><td>Beginner — Guided learning paths</td><td>Free / $14/mo</td></tr>
+      <tr><td><strong>HackTheBox</strong></td><td>Intermediate/Advanced — CTF style</td><td>Free / $14/mo</td></tr>
+      <tr><td><strong>VulnHub</strong></td><td>Offline VM download</td><td>Free</td></tr>
+      <tr><td><strong>PG Practice</strong></td><td>OSCP-like machines</td><td>$19/mo</td></tr>
+      <tr><td><strong>PentesterLab</strong></td><td>Web app specific</td><td>Free / $20/mo</td></tr>
+    </table>
+  </div>
+
+  <div class="chapter-nav">
+    <div></div>
+    <div class="chapter-nav-btn next" onclick="showPage('ch1')">
+      <div class="chapter-nav-label">Next →</div>
+      <div class="chapter-nav-title">Chapter 1: Introduction to Penetration Testing</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ CHAPTER 1 PAGE ══════════════════ -->
+<div id="page-ch1" class="page">
+  <div class="chapter-eyebrow">Chapter 1</div>
+  <h1 class="chapter-title-main">Introduction to Penetration Testing & Methodologies</h1>
+  <h1 class="chapter-title-bn">পেনিট্রেশন টেস্টিং ও মেথডলজি — পরিচিতি</h1>
+
+  <div class="chapter-intro-card">
+    <div class="cic-label">এই chapter-এ যা থাকবে (click to jump)</div>
+    <div class="cic-topics">
+      <span class="cic-topic" onclick="scrollTo('s1-1')">1.1 What is Pentesting</span>
+      <span class="cic-topic" onclick="scrollTo('s1-2')">1.2 Benefits</span>
+      <span class="cic-topic" onclick="scrollTo('s1-3')">1.3 Delivery Models</span>
+      <span class="cic-topic" onclick="scrollTo('s1-4')">1.4 ROI</span>
+      <span class="cic-topic" onclick="scrollTo('s1-5')">1.5 Assessment Types</span>
+      <span class="cic-topic" onclick="scrollTo('s1-6')">1.6 Strategies</span>
+      <span class="cic-topic" onclick="scrollTo('s1-7')">1.7 Cost & Scope</span>
+      <span class="cic-topic" onclick="scrollTo('s1-8')">1.8 Auto vs Manual</span>
+      <span class="cic-topic" onclick="scrollTo('s1-9')">1.9 Common Areas</span>
+      <span class="cic-topic" onclick="scrollTo('s1-10')">1.10 Process</span>
+      <span class="cic-topic" onclick="scrollTo('s1-11')">1.11 Phases</span>
+      <span class="cic-topic" onclick="scrollTo('s1-12')">1.12 Methodologies</span>
+      <span class="cic-topic" onclick="scrollTo('s1-13')">1.13 When to Test</span>
+      <span class="cic-topic" onclick="scrollTo('s1-14')">1.14 Ethics</span>
+      <span class="cic-topic" onclick="scrollTo('s1-15')">1.15 Qualifications</span>
+      <span class="cic-topic" onclick="scrollTo('s1-16')">1.16 Risks</span>
+    </div>
+  </div>
+
+  <h2 class="section-title" id="s1-1">1.1 What is Penetration Testing? <button class="bookmark-btn" onclick="addBookmark('s1-1','1.1 What is Penetration Testing')">🔖</button> <button class="section-complete-btn" data-sid="s1-1" onclick="toggleSection('s1-1')" title="Mark as read">○ Mark Done</button></h2>
+  <p><strong>Penetration Testing</strong> (সংক্ষেপে "pentest") হলো একটি <strong>authorized, simulated cyber attack</strong> — যেখানে একজন security professional একটি organization-এর systems, networks, বা applications-এ real attacker-এর মতো attack করে দেখে কোথায় দুর্বলতা আছে, সেই দুর্বলতাগুলো actually exploit করা যায় কিনা, এবং সেগুলো exploit হলে কতটুকু ক্ষতি হতে পারে।</p>
+
+  <div class="callout tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body">
+      <div class="callout-title">Core Concept</div>
+      <div class="callout-text"><strong>"আপনার security কতটা মজবুত সেটা জানতে হলে আগে নিজেই সেটাকে ভাঙার চেষ্টা করতে হবে।"</strong> — এটাই penetration testing-এর মূল দর্শন।</div>
+    </div>
+  </div>
+
+  <div class="ascii-box"><pre>
+┌────────────────────────────────────────────────────────────────┐
+│            PENETRATION TESTING কীভাবে কাজ করে                │
+├────────────────────────────────────────────────────────────────┤
+│  CLIENT                         PENTESTER                      │
+│  ┌──────────┐   Written Perm.  ┌──────────────┐               │
+│  │Organization├────────────────►│ Ethical Hacker│              │
+│  │          │                  │              │               │
+│  │ Systems  │                  │  1. Recon    │               │
+│  │ Networks │◄─────────────────│  2. Scan     │               │
+│  │ Apps     │   Attack Sim.    │  3. Exploit  │               │
+│  │          │                  │  4. Report   │               │
+│  └──────────┘                  └──────────────┘               │
+│       │                              │                        │
+│       │        ┌─────────────────┐   │                        │
+│       └───────►│  Final Report   │◄──┘                        │
+│                │  • Findings     │                             │
+│                │  • Risk Rating  │                             │
+│                │  • Remediation  │                             │
+│                └─────────────────┘                             │
+└────────────────────────────────────────────────────────────────┘</pre></div>
+
+  <h3 class="sub-title">Hacking vs Ethical Hacking vs Penetration Testing</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Term</th><th>Authorization</th><th>Goal</th><th>Legal?</th></tr>
+      <tr><td><strong>Hacking (Malicious)</strong></td><td class="vs-no">❌ None</td><td>Personal gain, damage, data theft</td><td class="vs-no">❌ Illegal</td></tr>
+      <tr><td><strong>Ethical Hacking</strong></td><td class="vs-yes">✅ Written</td><td>Improve security (broad)</td><td class="vs-yes">✅ Legal</td></tr>
+      <tr><td><strong>Penetration Testing</strong></td><td class="vs-yes">✅ Formal Contract</td><td>Scoped attack simulation + report</td><td class="vs-yes">✅ Legal</td></tr>
+    </table>
+  </div>
+
+  <h3 class="sub-title">Vulnerability Assessment vs Penetration Testing</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>দিক</th><th>Vulnerability Assessment</th><th>Penetration Testing</th></tr>
+      <tr><td>কী করে?</td><td>দুর্বলতা খোঁজে, list করে</td><td>দুর্বলতা <strong>exploit</strong> করে দেখায়</td></tr>
+      <tr><td>Tools</td><td>Automated (Nessus, OpenVAS)</td><td>Manual + Automated উভয়</td></tr>
+      <tr><td>Output</td><td>Vulnerability list</td><td>Full attack chain + impact</td></tr>
+      <tr><td>Time & Cost</td><td>কম সময়, কম খরচ</td><td>বেশি সময়, বেশি খরচ, বেশি মূল্যবান</td></tr>
+      <tr><td>Depth</td><td>Surface level</td><td>Deep — business impact দেখায়</td></tr>
+    </table>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s1-2">1.2 Benefits of Conducting Pentesting <button class="bookmark-btn" onclick="addBookmark('s1-2','1.2 Benefits')">🔖</button> <button class="section-complete-btn" data-sid="s1-2" onclick="toggleSection('s1-2')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Pentesting শুধু "compliance checkbox" নয় — এর real business value আছে:</p>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>#</th><th>Benefit</th><th>কীভাবে কাজ করে</th></tr>
+      <tr><td>1</td><td><strong>Real-world Attack Simulation</strong></td><td>Actual attacker-এর মতো attack path দেখায়</td></tr>
+      <tr><td>2</td><td><strong>Risk Prioritization</strong></td><td>কোন vulnerability আগে fix করতে হবে জানা যায়</td></tr>
+      <tr><td>3</td><td><strong>Compliance</strong></td><td>PCI DSS, ISO 27001, SOC 2 requirement পূরণ</td></tr>
+      <tr><td>4</td><td><strong>SOC Effectiveness Test</strong></td><td>Blue team কতক্ষণে detect করে সেটা জানা যায়</td></tr>
+      <tr><td>5</td><td><strong>Stakeholder Assurance</strong></td><td>Board, investors, clients-কে security দেখানো</td></tr>
+    </table>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-icon">📊</div>
+    <div class="callout-body">
+      <div class="callout-title">Case Study — E-commerce Platform</div>
+      <div class="callout-text">৫০,০০০+ user-এর একটি platform-এ pentest-এ পাওয়া গেল: SQL Injection (পুরো DB dump সম্ভব), weak admin password, outdated payment gateway। Pentest cost: ৳৩ লক্ষ। Potential breach loss avoided: ৳৫ কোটি+। <strong>ROI: ~১৬৫৭%</strong></div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s1-3">1.3 Pentesting Service Delivery Model <button class="bookmark-btn" onclick="addBookmark('s1-3','1.3 Delivery Models')">🔖</button> <button class="section-complete-btn" data-sid="s1-3" onclick="toggleSection('s1-3')" title="Mark as read">○ Mark Done</button></h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Model</th><th>কীভাবে হয়</th><th>✅ Pros</th><th>❌ Cons</th></tr>
+      <tr><td><strong>Onsite</strong></td><td>Pentester client-এর physical location-এ যায়</td><td>Physical access test সম্ভব, no latency</td><td>Travel cost বেশি, scheduling কঠিন</td></tr>
+      <tr><td><strong>Remote</strong></td><td>VPN / jump box দিয়ে কাজ</td><td>Cost effective, flexible</td><td>Physical test সম্ভব নয়</td></tr>
+      <tr><td><strong>Hybrid</strong></td><td>কিছু onsite, কিছু remote</td><td>সব ধরনের testing কভার</td><td>Coordination জটিল</td></tr>
+    </table>
+  </div>
+  <div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><div class="callout-title">Pro Tip</div><div class="callout-text">বেশিরভাগ modern engagement <strong>hybrid</strong> হয়। প্রথম দিন onsite গিয়ে network access setup করো, তারপর বাকি testing remote-এ। এতে cost কমে এবং সব ধরনের testing কভার হয়।</div></div></div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s1-4">1.4 ROI For Penetration Testing <button class="bookmark-btn" onclick="addBookmark('s1-4','1.4 ROI')">🔖</button> <button class="section-complete-btn" data-sid="s1-4" onclick="toggleSection('s1-4')" title="Mark as read">○ Mark Done</button></h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Formula</span></div>
+    <pre><code>ROI = (Potential Loss Avoided − Cost of Pentest)
+      ────────────────────────────────────────── × 100
+                   Cost of Pentest</code></pre>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Item</th><th>Amount (BDT)</th></tr>
+      <tr><td>External Network Pentest</td><td>৳৪,০০,০০০</td></tr>
+      <tr><td>Internal Network Pentest</td><td>৳৩,০০,০০০</td></tr>
+      <tr><td>Web App Pentest (3 apps)</td><td>৳৩,০০,০০০</td></tr>
+      <tr><td><strong>Total Pentest Cost</strong></td><td><strong>৳১০,০০,০০০</strong></td></tr>
+      <tr><td colspan="2" style="background:var(--bg3);color:var(--text3);font-size:11px;font-family:var(--font-en)">POTENTIAL BREACH COST (avoided)</td></tr>
+      <tr><td>Data breach average</td><td>৳৫,০০,০০,০০০</td></tr>
+      <tr><td>Regulatory fine</td><td>৳১,০০,০০,০০০</td></tr>
+      <tr><td>Reputation loss</td><td>৳২,০০,০০,০০০</td></tr>
+      <tr><td><strong>ROI</strong></td><td><strong style="color:var(--green)">৭,৯০০%+</strong></td></tr>
+    </table>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s1-5">1.5 Types of Penetration Assessment <button class="bookmark-btn" onclick="addBookmark('s1-5','1.5 Assessment Types')">🔖</button> <button class="section-complete-btn" data-sid="s1-5" onclick="toggleSection('s1-5')" title="Mark as read">○ Mark Done</button></h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Type</th><th>Info Given</th><th>Simulates</th><th>Cost/Time</th><th>Best For</th></tr>
+      <tr><td><span class="badge badge-high">Black Box</span></td><td class="vs-no">❌ কিছুই না</td><td>External attacker</td><td>সবচেয়ে বেশি</td><td>Realistic external simulation, compliance</td></tr>
+      <tr><td><span class="badge badge-low">White Box</span></td><td class="vs-yes">✅ সব কিছু</td><td>Internal/developer</td><td>সবচেয়ে কম</td><td>Code review, pre-launch testing</td></tr>
+      <tr><td><span class="badge badge-medium">Grey Box</span></td><td class="vs-partial">⚡ কিছুটা</td><td>Insider/compromised user</td><td>মাঝামাঝি</td><td>Most realistic, most common</td></tr>
+    </table>
+  </div>
+  <div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><div class="callout-title">কোনটা বেছে নেবে?</div><div class="callout-text"><strong>Black Box:</strong> SOC testing, PCI DSS compliance &nbsp;|&nbsp; <strong>White Box:</strong> Secure code review, pre-production &nbsp;|&nbsp; <strong>Grey Box:</strong> Most real-world engagements — insider threat simulation</div></div></div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s1-6">1.6 Strategies of Penetration Testing <button class="bookmark-btn" onclick="addBookmark('s1-6','1.6 Strategies')">🔖</button> <button class="section-complete-btn" data-sid="s1-6" onclick="toggleSection('s1-6')" title="Mark as read">○ Mark Done</button></h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Strategy</th><th>কে জানে?</th><th>Best For</th></tr>
+      <tr><td><strong>External Testing</strong></td><td>Pentester জানে target</td><td>Internet-facing systems (web, VPN, firewall)</td></tr>
+      <tr><td><strong>Internal Testing</strong></td><td>Pentester already inside</td><td>Lateral movement, AD, insider threat</td></tr>
+      <tr><td><strong>Targeted (Lights-on)</strong></td><td>উভয়পক্ষ জানে</td><td>Collaborative, knowledge-sharing approach</td></tr>
+      <tr><td><strong>Blind</strong></td><td>IT team জানে না</td><td>Realistic simulation, SOC readiness</td></tr>
+      <tr><td><strong>Double-Blind</strong></td><td>শুধু management জানে</td><td>Ultimate realism, full SOC effectiveness test</td></tr>
+    </table>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s1-7">1.7 Cost & Comprehensiveness <button class="bookmark-btn" onclick="addBookmark('s1-7','1.7 Cost')">🔖</button> <button class="section-complete-btn" data-sid="s1-7" onclick="toggleSection('s1-7')" title="Mark as read">○ Mark Done</button></h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Pentest Type</th><th>Approximate Cost (BDT)</th></tr>
+      <tr><td>Single Web App</td><td>৳৫০,০০০ – ৳২,০০,০০০</td></tr>
+      <tr><td>External Network</td><td>৳১,০০,০০০ – ৳৫,০০,০০০</td></tr>
+      <tr><td>Internal + AD</td><td>৳৩,০০,০০০ – ৳১০,০০,০০০</td></tr>
+      <tr><td>Full Engagement</td><td>৳১০,০০,০০০ – ৳৩০,০০,০০০+</td></tr>
+      <tr><td>Red Team Operation</td><td>৳৩০,০০,০০০ – ৳১,০০,০০,০০০+</td></tr>
+    </table>
+  </div>
+  <div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><div class="callout-title">Pricing Factors</div><div class="callout-text">Scope size (# IPs/URLs) · Assessment type · Tester seniority · Complexity · Timeline urgency · Onsite vs Remote · Report depth — এই factors মিলিয়ে দাম নির্ধারণ হয়।</div></div></div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s1-8">1.8 Automated vs Manual Pentesting <button class="bookmark-btn" onclick="addBookmark('s1-8','1.8 Auto vs Manual')">🔖</button> <button class="section-complete-btn" data-sid="s1-8" onclick="toggleSection('s1-8')" title="Mark as read">○ Mark Done</button></h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>দিক</th><th>Automated</th><th>Manual</th></tr>
+      <tr><td>Tools</td><td>Nessus, OpenVAS, Nikto, SQLMap</td><td>Human pentester</td></tr>
+      <tr><td>Speed</td><td>কয়েক ঘণ্টায় শেষ</td><td>দিন থেকে সপ্তাহ</td></tr>
+      <tr><td>Coverage</td><td>Known CVE ভালো পায়</td><td>Business logic flaw, chained vuln</td></tr>
+      <tr><td>False Positives</td><td class="vs-no">❌ বেশি</td><td class="vs-yes">✅ কম</td></tr>
+      <tr><td>Context</td><td class="vs-no">❌ বোঝে না</td><td class="vs-yes">✅ Real impact assess করে</td></tr>
+    </table>
+  </div>
+  <div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><div class="callout-title">Pro Tip</div><div class="callout-text">Professional pentest সবসময় দুটোর combination। Automated scanner-এর finding manually verify না করলে false positive থাকতে পারে। Client-কে false positive দেওয়া credibility নষ্ট করে।</div></div></div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s1-9">1.9 Common Areas of Pentesting <button class="bookmark-btn" onclick="addBookmark('s1-9','1.9 Common Areas')">🔖</button> <button class="section-complete-btn" data-sid="s1-9" onclick="toggleSection('s1-9')" title="Mark as read">○ Mark Done</button></h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Area</th><th>কী test হয়</th></tr>
+      <tr><td><strong>Network (External)</strong></td><td>Firewall, VPN, DMZ, public-facing services</td></tr>
+      <tr><td><strong>Network (Internal)</strong></td><td>AD, SMB, lateral movement, internal services</td></tr>
+      <tr><td><strong>Web Application</strong></td><td>OWASP Top 10, API, authentication</td></tr>
+      <tr><td><strong>Mobile App</strong></td><td>Android APK, iOS IPA, API backend</td></tr>
+      <tr><td><strong>Social Engineering</strong></td><td>Phishing, vishing, smishing, USB drops</td></tr>
+      <tr><td><strong>Cloud</strong></td><td>AWS/Azure/GCP misconfig, IAM privesc</td></tr>
+      <tr><td><strong>Physical</strong></td><td>Badge cloning, tailgating, lock picking</td></tr>
+      <tr><td><strong>Red Team</strong></td><td>উপরের সব combined — full scope simulation</td></tr>
+    </table>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s1-10">1.10 Process of Penetration Testing <button class="bookmark-btn" onclick="addBookmark('s1-10','1.10 Process')">🔖</button> <button class="section-complete-btn" data-sid="s1-10" onclick="toggleSection('s1-10')" title="Mark as read">○ Mark Done</button></h2>
+  <div class="ascii-box"><pre>
+  ┌─────────────────────────────┐
+  │   1. PRE-ENGAGEMENT         │  ← Scope, contract, ROE
+  └──────────────┬──────────────┘
+                 ▼
+  ┌─────────────────────────────┐
+  │   2. RECONNAISSANCE         │  ← OSINT, passive/active recon
+  └──────────────┬──────────────┘
+                 ▼
+  ┌─────────────────────────────┐
+  │   3. SCANNING & ENUMERATION │  ← Nmap, Nessus, service detect
+  └──────────────┬──────────────┘
+                 ▼
+  ┌─────────────────────────────┐
+  │   4. EXPLOITATION           │  ← Gain access, PoC
+  └──────────────┬──────────────┘
+                 ▼
+  ┌─────────────────────────────┐
+  │   5. POST-EXPLOITATION      │  ← PrivEsc, lateral movement
+  └──────────────┬──────────────┘
+                 ▼
+  ┌─────────────────────────────┐
+  │   6. REPORTING              │  ← Findings, risk rating, fix
+  └──────────────┬──────────────┘
+                 ▼
+  ┌─────────────────────────────┐
+  │   7. CLEANUP                │  ← Remove backdoors, artifacts
+  └─────────────────────────────┘</pre></div>
+  <div class="callout warning"><div class="callout-icon">⚠️</div><div class="callout-body"><div class="callout-title">Cleanup Phase Skip করো না</div><div class="callout-text">Pentest-এ create করা backdoor বা user account যদি থেকে যায়, সেটা real attacker ব্যবহার করতে পারবে। Cleanup mandatory।</div></div></div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s1-11">1.11 Phases of Penetration Testing <button class="bookmark-btn" onclick="addBookmark('s1-11','1.11 Phases')">🔖</button> <button class="section-complete-btn" data-sid="s1-11" onclick="toggleSection('s1-11')" title="Mark as read">○ Mark Done</button></h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Phase</th><th>কী হয়</th><th>Key Activities</th></tr>
+      <tr><td><span class="badge badge-info">Phase 1</span> Pre-Engagement</td><td>কোনো technical কাজ নেই</td><td>Scope, NDA, ROE, permission letter</td></tr>
+      <tr><td><span class="badge badge-info">Phase 2</span> Reconnaissance</td><td>তথ্য সংগ্রহ</td><td>OSINT, WHOIS, Google Dorking, LinkedIn</td></tr>
+      <tr><td><span class="badge badge-info">Phase 3</span> Scanning</td><td>Target probe করা</td><td>Nmap, Nessus, web crawling</td></tr>
+      <tr><td><span class="badge badge-high">Phase 4</span> Exploitation</td><td>Vulnerability exploit</td><td>Metasploit, manual exploit, PoC</td></tr>
+      <tr><td><span class="badge badge-critical">Phase 5</span> Post-Exploitation</td><td>Access after foothold</td><td>PrivEsc, lateral movement, data access</td></tr>
+      <tr><td><span class="badge badge-medium">Phase 6</span> Reporting</td><td>সব document করা</td><td>Executive + technical report, CVSS</td></tr>
+      <tr><td><span class="badge badge-low">Phase 7</span> Cleanup</td><td>সব artifact সরানো</td><td>Delete backdoors, restore configs</td></tr>
+    </table>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s1-12">1.12 Penetration Testing Methodologies <button class="bookmark-btn" onclick="addBookmark('s1-12','1.12 Methodologies')">🔖</button> <button class="section-complete-btn" data-sid="s1-12" onclick="toggleSection('s1-12')" title="Mark as read">○ Mark Done</button></h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Methodology</th><th>Full Name</th><th>Best For</th><th>URL</th></tr>
+      <tr><td><strong>PTES</strong></td><td>Penetration Testing Execution Standard</td><td>General pentesting — সবচেয়ে widely used</td><td>ptes.org</td></tr>
+      <tr><td><strong>OWASP OTG</strong></td><td>OWASP Testing Guide</td><td>Web application testing</td><td>owasp.org</td></tr>
+      <tr><td><strong>NIST 800-115</strong></td><td>Technical Guide to IS Testing</td><td>Government, compliance-heavy</td><td>csrc.nist.gov</td></tr>
+      <tr><td><strong>MITRE ATT&CK</strong></td><td>Adversarial Tactics, Techniques & Common Knowledge</td><td>Red team, TTP mapping</td><td>attack.mitre.org</td></tr>
+      <tr><td><strong>OSSTMM</strong></td><td>Open Source Security Testing Methodology Manual</td><td>Comprehensive, metrics-based</td><td>isecom.org</td></tr>
+    </table>
+  </div>
+  <div class="callout info"><div class="callout-icon">ℹ️</div><div class="callout-body"><div class="callout-title">এই বই কোন Methodology Follow করে?</div><div class="callout-text">এই handbook মূলত <strong>PTES</strong> এবং <strong>MITRE ATT&CK</strong> framework follow করে — কারণ এগুলো সবচেয়ে practical এবং real-world engagement-এর সাথে সামঞ্জস্যপূর্ণ।</div></div></div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s1-13">1.13 When Should Pentesting Be Performed? <button class="bookmark-btn" onclick="addBookmark('s1-13','1.13 When to Test')">🔖</button> <button class="section-complete-btn" data-sid="s1-13" onclick="toggleSection('s1-13')" title="Mark as read">○ Mark Done</button></h2>
+  <ul class="checklist" id="when-checklist">
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>Annually</strong> — Regular security posture + Compliance (PCI DSS, ISO 27001)</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>After Major Changes</strong> — New app launch, cloud migration, merger/acquisition</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>After a Breach</strong> — কোথায় ফাঁক ছিল সেটা identify করতে</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>Before Product Launch</strong> — নতুন product বা service-এর আগে</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>Regulatory Requirement</strong> — Banking, Healthcare, Payment industry</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>Significant Code Change</strong> — Major feature addition বা architectural change</span></li>
+  </ul>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s1-14">1.14 Ethics of a Penetration Tester <button class="bookmark-btn" onclick="addBookmark('s1-14','1.14 Ethics')">🔖</button> <button class="section-complete-btn" data-sid="s1-14" onclick="toggleSection('s1-14')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Technical skill থেকে ethics বেশি গুরুত্বপূর্ণ। Wrong hands-এ এই skill অত্যন্ত ক্ষতিকর।</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Principle</th><th>মানে</th></tr>
+      <tr><td>✅ <strong>Authorization First</strong></td><td>Written permission ছাড়া একটি command-ও চালানো যাবে না</td></tr>
+      <tr><td>✅ <strong>Confidentiality</strong></td><td>Client-এর তথ্য, findings — কিছুই third party-কে share করা যাবে না</td></tr>
+      <tr><td>✅ <strong>Do No Harm</strong></td><td>Production crash, data delete, service disrupt করা যাবে না</td></tr>
+      <tr><td>✅ <strong>Truthful Reporting</strong></td><td>Findings minimize বা exaggerate করা — দুটোই অপ্রফেশনাল</td></tr>
+      <tr><td>❌ <strong>No Scope Creep</strong></td><td>Scope-এর বাইরে যাওয়া যাবে না — এমনকি বড় vulnerability দেখলেও</td></tr>
+      <tr><td>❌ <strong>No Personal Gain</strong></td><td>Pentest access personal কাজে ব্যবহার করা যাবে না</td></tr>
+    </table>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s1-15">1.15 Qualifications of a Pentester <button class="bookmark-btn" onclick="addBookmark('s1-15','1.15 Qualifications')">🔖</button> <button class="section-complete-btn" data-sid="s1-15" onclick="toggleSection('s1-15')" title="Mark as read">○ Mark Done</button></h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Domain</th><th>Skills Required</th></tr>
+      <tr><td>Networking</td><td>TCP/IP, DNS, HTTP/S, routing, firewalls, VLANs</td></tr>
+      <tr><td>Operating Systems</td><td>Linux (Kali) — proficient · Windows Server/AD — good</td></tr>
+      <tr><td>Programming</td><td>Python (must) · Bash · PowerShell</td></tr>
+      <tr><td>Web Technologies</td><td>HTML, JavaScript, SQL, REST API</td></tr>
+      <tr><td>Security Tools</td><td>Nmap, Metasploit, Burp Suite, Nessus, Hashcat, Impacket</td></tr>
+      <tr><td>Soft Skills</td><td>Clear report writing, client communication</td></tr>
+    </table>
+  </div>
+
+  <div class="callout lab">
+    <div class="callout-icon">🎯</div>
+    <div class="callout-body">
+      <div class="callout-title">Certification Roadmap</div>
+      <div class="callout-text">
+        <strong>Beginner:</strong> CompTIA Security+ → eJPT (INE) → TryHackMe paths<br>
+        <strong>Intermediate:</strong> CEH → PNPT (TCM) → CPTS (HTB) → eCPPT<br>
+        <strong>Advanced:</strong> OSCP (OffSec) → OSEP → CRTO → CRTE<br>
+        <strong>Specialist:</strong> BSCP (Burp Suite Web) · CRTO (Red Team) · CREST CRT
+      </div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s1-16">1.16 Risk Associated With Penetration Testing <button class="bookmark-btn" onclick="addBookmark('s1-16','1.16 Risks')">🔖</button> <button class="section-complete-btn" data-sid="s1-16" onclick="toggleSection('s1-16')" title="Mark as read">○ Mark Done</button></h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Risk</th><th>Mitigation</th></tr>
+      <tr><td>System crash / DoS during testing</td><td>Business hours-এর বাইরে test · DoS tests avoid করো</td></tr>
+      <tr><td>Data loss</td><td>Test-এর আগে backup নিশ্চিত করো · VM snapshot নাও</td></tr>
+      <tr><td>False sense of security</td><td>Communicate করো যে pentest 100% coverage দেয় না</td></tr>
+      <tr><td>Scope creep</td><td>ROE clearly define করো · Scope changes লিখিত নাও</td></tr>
+      <tr><td>Legal complications</td><td>Written authorization আবশ্যক · Lawyer review করাও</td></tr>
+      <tr><td>Third-party impact</td><td>Shared hosting-এ অন্যের site affect হতে পারে — scope carefully define করো</td></tr>
+    </table>
+  </div>
+
+  <div class="callout lab">
+    <div class="callout-icon">🧪</div>
+    <div class="callout-body">
+      <div class="callout-title">LAB 1.1 — Scenario Exercise</div>
+      <div class="callout-text">
+        <strong>Scenario 1:</strong> ব্যাংক নতুন internet banking portal launch করতে চাইছে। Source code আছে। → <em>White Box + Internal + OWASP Testing Guide</em><br><br>
+        <strong>Scenario 2:</strong> E-commerce company insider threat suspect করছে। IT team blind থাকবে। → <em>Grey Box + Double-Blind + PTES</em><br><br>
+        <strong>Scenario 3:</strong> Government agency PCI DSS compliance-এর জন্য external + internal test চাইছে। → <em>Black Box External + White Box Internal + PTES + NIST 800-115</em>
+      </div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <div class="callout info">
+    <div class="callout-icon">✅</div>
+    <div class="callout-body">
+      <div class="callout-title">Chapter 1 — Key Takeaways</div>
+      <div class="callout-text">
+        • Pentest = Authorized Simulated Attack (VA ≠ Pentest)<br>
+        • Assessment types: Black Box / White Box / Grey Box<br>
+        • 5 Strategies: External / Internal / Targeted / Blind / Double-Blind<br>
+        • Process: Pre-engagement → Recon → Scan → Exploit → Post-exploit → Report → Cleanup<br>
+        • Methodologies: PTES, OWASP OTG, MITRE ATT&CK<br>
+        • Ethics সবসময় technical skill-এর আগে
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter-nav">
+    <div class="chapter-nav-btn" onclick="showPage('front')">
+      <div class="chapter-nav-label">← Previous</div>
+      <div class="chapter-nav-title">Front Matter</div>
+    </div>
+    <div class="chapter-nav-btn next" onclick="showPage('ch2')">
+      <div class="chapter-nav-label">Next →</div>
+      <div class="chapter-nav-title">Chapter 2: Laws & Data Protection</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ CHAPTER 2 PAGE ══════════════════ -->
+<div id="page-ch2" class="page">
+  <div class="chapter-eyebrow">Chapter 2</div>
+  <h1 class="chapter-title-main">Laws and Regulations of Data Protection</h1>
+  <h1 class="chapter-title-bn">ডেটা সুরক্ষার আইন ও বিধিমালা</h1>
+
+  <div class="chapter-intro-card">
+    <div class="cic-label">এই chapter-এ যা থাকবে</div>
+    <div class="cic-topics">
+      <span class="cic-topic" onclick="scrollTo('s2-1')">2.1 Bangladesh</span>
+      <span class="cic-topic" onclick="scrollTo('s2-2')">2.2 United States</span>
+      <span class="cic-topic" onclick="scrollTo('s2-3')">2.3 EU — GDPR</span>
+      <span class="cic-topic" onclick="scrollTo('s2-4')">2.4 UK GDPR & DPA</span>
+      <span class="cic-topic" onclick="scrollTo('s2-5')">2.5 India — DPDP</span>
+      <span class="cic-topic" onclick="scrollTo('s2-6')">2.6 China — PIPL/CSL</span>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <div class="callout-title">কেন এই Chapter গুরুত্বপূর্ণ?</div>
+      <div class="callout-text">Pentesting শুধু technical skill নয় — legal framework জানা equally important। Client-এর data যে jurisdiction-এ পড়ে, সেই আইন না জানলে তুমি নিজেই legal risk-এ পড়তে পারো। International client হলে multiple jurisdiction একসাথে apply হতে পারে।</div>
+    </div>
+  </div>
+
+  <h2 class="section-title" id="s2-1">2.1 Data Protection Laws in Bangladesh <button class="bookmark-btn" onclick="addBookmark('s2-1','2.1 Bangladesh Laws')">🔖</button> <button class="section-complete-btn" data-sid="s2-1" onclick="toggleSection('s2-1')" title="Mark as read">○ Mark Done</button></h2>
+  <p>বাংলাদেশে cybersecurity ও data protection-এর legal framework এখনো পরিপক্ক হচ্ছে। বর্তমানে কয়েকটি গুরুত্বপূর্ণ আইন ও বিধিমালা apply হয়:</p>
+
+  <h3 class="sub-title">ক) ডিজিটাল নিরাপত্তা আইন, ২০১৮ (DSA 2018)</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>বিষয়</th><th>বিস্তারিত</th></tr>
+      <tr><td>পূর্ণ নাম</td><td>Digital Security Act, 2018</td></tr>
+      <tr><td>উদ্দেশ্য</td><td>Digital crime প্রতিরোধ, cybersecurity নিশ্চিত করা</td></tr>
+      <tr><td>Pentest-এ প্রাসঙ্গিক ধারা</td><td>ধারা ১৭–২০: Unauthorized access, data theft, hacking</td></tr>
+      <tr><td>সর্বোচ্চ শাস্তি (unauthorized access)</td><td>৭ বছর কারাদণ্ড বা ৳২৫ লক্ষ জরিমানা বা উভয়</td></tr>
+      <tr><td>Critical infrastructure attack</td><td>১৪ বছর কারাদণ্ড পর্যন্ত</td></tr>
+    </table>
+  </div>
+  <div class="callout warning"><div class="callout-icon">⚠️</div><div class="callout-body"><div class="callout-title">Pentester-এর জন্য সতর্কতা</div><div class="callout-text">DSA-র ধারা ১৭ অনুযায়ী, authorization ছাড়া কোনো digital device বা system-এ access করা illegal। Written permission (engagement letter + ROE) ছাড়া pentest করলে এই আইনে মামলা হতে পারে।</div></div></div>
+
+  <h3 class="sub-title">খ) তথ্য ও যোগাযোগ প্রযুক্তি আইন, ২০০৬ (ICT Act)</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>ধারা</th><th>বিষয়</th><th>শাস্তি</th></tr>
+      <tr><td>৫৪</td><td>Computer hacking</td><td>৩–৭ বছর কারাদণ্ড ও জরিমানা</td></tr>
+      <tr><td>৫৫</td><td>Computer source code damage</td><td>৩ বছর পর্যন্ত কারাদণ্ড</td></tr>
+      <tr><td>৫৬</td><td>Unauthorized system access</td><td>৩–৭ বছর কারাদণ্ড</td></tr>
+      <tr><td>৫৭</td><td>Defamatory/harmful content প্রকাশ</td><td>৭–১৪ বছর কারাদণ্ড</td></tr>
+    </table>
+  </div>
+
+  <h3 class="sub-title">গ) Bangladesh Bank Cybersecurity Framework</h3>
+  <p>Bangladesh Bank (BB) ২০২১ সালে একটি comprehensive <strong>Cybersecurity Framework for Banks and Financial Institutions</strong> প্রকাশ করেছে। এই framework অনুযায়ী:</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Requirement</th><th>বিস্তারিত</th></tr>
+      <tr><td>Annual Pentest</td><td>সকল scheduled bank-এর জন্য বার্ষিক pentest mandatory</td></tr>
+      <tr><td>Vulnerability Assessment</td><td>Semi-annual (বছরে দুইবার)</td></tr>
+      <tr><td>Pentesting Firm</td><td>BB-approved বা internationally certified firm</td></tr>
+      <tr><td>Report Submission</td><td>BB-তে report submit করতে হবে</td></tr>
+      <tr><td>Remediation Deadline</td><td>Critical findings: ৩০ দিন · High: ৯০ দিন</td></tr>
+    </table>
+  </div>
+
+  <h3 class="sub-title">ঘ) Personal Data Protection Act (প্রস্তাবিত)</h3>
+  <div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><div class="callout-title">আসছে: Bangladesh Personal Data Protection Act</div><div class="callout-text">বাংলাদেশ সরকার একটি Personal Data Protection Act (PDPA) প্রণয়নের প্রক্রিয়ায় রয়েছে। Draft অনুযায়ী এটি GDPR-inspired হবে এবং data subject rights, data breach notification, cross-border data transfer নিয়ন্ত্রণ করবে। Pentester হিসেবে এই আইনের update track করা জরুরি।</div></div></div>
+
+  <div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><div class="callout-title">Pentester-এর Checklist for Bangladesh Engagements</div><div class="callout-text">✅ Written engagement letter (বাংলা + English উভয় ভাষায় ভালো) &nbsp;|&nbsp; ✅ ROE-তে DSA/ICT Act reference রাখো &nbsp;|&nbsp; ✅ Financial sector client হলে BB framework জানো &nbsp;|&nbsp; ✅ Data access করলে সর্বনিম্ন access principle follow করো &nbsp;|&nbsp; ✅ Captured data secure handle করো, report-এ full sensitive data দেখাবে না</div></div></div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s2-2">2.2 Data Protection Framework in the United States <button class="bookmark-btn" onclick="addBookmark('s2-2','2.2 US Laws')">🔖</button> <button class="section-complete-btn" data-sid="s2-2" onclick="toggleSection('s2-2')" title="Mark as read">○ Mark Done</button></h2>
+  <p>US-এ কোনো single federal data protection law নেই। পরিবর্তে <strong>sector-specific</strong> এবং <strong>state-level</strong> laws-এর patchwork আছে।</p>
+
+  <h3 class="sub-title">Federal Laws — Sector-Specific</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Law</th><th>Full Name</th><th>Applies To</th><th>Pentest-Relevance</th></tr>
+      <tr><td><strong>CFAA</strong></td><td>Computer Fraud and Abuse Act (1986)</td><td>সব computer systems</td><td>Unauthorized access criminalize করে — pentester-এর main legal risk</td></tr>
+      <tr><td><strong>HIPAA</strong></td><td>Health Insurance Portability and Accountability Act</td><td>Healthcare</td><td>PHI (Protected Health Info) security testing</td></tr>
+      <tr><td><strong>GLBA</strong></td><td>Gramm-Leach-Bliley Act</td><td>Financial services</td><td>Financial data security assessment</td></tr>
+      <tr><td><strong>FERPA</strong></td><td>Family Educational Rights and Privacy Act</td><td>Education</td><td>Student data protection</td></tr>
+      <tr><td><strong>SOX</strong></td><td>Sarbanes-Oxley Act</td><td>Public companies</td><td>IT controls, financial data security</td></tr>
+    </table>
+  </div>
+
+  <h3 class="sub-title">CFAA — Pentester-এর জন্য সবচেয়ে গুরুত্বপূর্ণ</h3>
+  <div class="callout warning"><div class="callout-icon">⚠️</div><div class="callout-body"><div class="callout-title">CFAA এবং Penetration Testing</div><div class="callout-text">CFAA-এর Section 1030 অনুযায়ী, "unauthorized access" একটি federal crime। US client-এর pentest করতে হলে: <strong>(1)</strong> Written authorization স্পষ্টভাবে CFAA ভাষায় লেখা থাকতে হবে, <strong>(2)</strong> Scope clearly define, <strong>(3)</strong> আইনজীবী দিয়ে contract review করানো ভালো।</div></div></div>
+
+  <h3 class="sub-title">State-Level Laws</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>State Law</th><th>Key Provisions</th></tr>
+      <tr><td><strong>CCPA / CPRA (California)</strong></td><td>Consumer data rights, opt-out of sale, data breach notification — GDPR-এর কাছাকাছি</td></tr>
+      <tr><td><strong>VCDPA (Virginia)</strong></td><td>Consumer data protection, sensitive data handling</td></tr>
+      <tr><td><strong>CPA (Colorado)</strong></td><td>Privacy rights, data minimization</td></tr>
+      <tr><td><strong>SHIELD Act (New York)</strong></td><td>Expanded data breach notification</td></tr>
+    </table>
+  </div>
+
+  <h3 class="sub-title">PCI DSS — Payment Card Industry</h3>
+  <p>US এবং globally payment-related systems-এর জন্য <strong>PCI DSS v4.0</strong> অত্যন্ত গুরুত্বপূর্ণ:</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Requirement</th><th>Pentest Implication</th></tr>
+      <tr><td>Req. 11.3.1</td><td>Annual external pentest mandatory</td></tr>
+      <tr><td>Req. 11.3.2</td><td>Annual internal pentest mandatory</td></tr>
+      <tr><td>Req. 11.3.3</td><td>Post-remediation retest required</td></tr>
+      <tr><td>Qualified Tester</td><td>OSCP বা equivalent certification recommended</td></tr>
+      <tr><td>Methodology</td><td>Industry-accepted (PTES, OWASP) follow করতে হবে</td></tr>
+    </table>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s2-3">2.3 European Data Protection Law — GDPR <button class="bookmark-btn" onclick="addBookmark('s2-3','2.3 GDPR')">🔖</button> <button class="section-complete-btn" data-sid="s2-3" onclick="toggleSection('s2-3')" title="Mark as read">○ Mark Done</button></h2>
+  <p><strong>GDPR (General Data Protection Regulation)</strong> বিশ্বের সবচেয়ে comprehensive data protection law। ২০১৮ সালে effective হয়েছে। EU-র বাইরে থেকেও EU citizens-এর data process করলে GDPR apply হয়।</p>
+
+  <h3 class="sub-title">GDPR-এর মূল Principles</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>#</th><th>Principle</th><th>Pentesting Implication</th></tr>
+      <tr><td>1</td><td><strong>Lawfulness, Fairness, Transparency</strong></td><td>Pentest-এর legal basis থাকতে হবে (legitimate interest বা contract)</td></tr>
+      <tr><td>2</td><td><strong>Purpose Limitation</strong></td><td>Test-এ collected data শুধু pentest purpose-এ ব্যবহার করতে হবে</td></tr>
+      <tr><td>3</td><td><strong>Data Minimization</strong></td><td>শুধু প্রয়োজনীয় data access করো</td></tr>
+      <tr><td>4</td><td><strong>Accuracy</strong></td><td>Test data accurate রাখো</td></tr>
+      <tr><td>5</td><td><strong>Storage Limitation</strong></td><td>Test শেষে captured personal data delete করতে হবে</td></tr>
+      <tr><td>6</td><td><strong>Integrity & Confidentiality</strong></td><td>Captured data securely store করতে হবে</td></tr>
+      <tr><td>7</td><td><strong>Accountability</strong></td><td>Pentester DPA (Data Processing Agreement) sign করতে পারে</td></tr>
+    </table>
+  </div>
+
+  <h3 class="sub-title">GDPR Fines — কতটা গুরুতর?</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Violation Level</th><th>Maximum Fine</th><th>Example</th></tr>
+      <tr><td>Lower tier</td><td>€10M বা global turnover-এর 2%</td><td>Consent violation, record-keeping failure</td></tr>
+      <tr><td>Upper tier</td><td><strong>€20M বা global turnover-এর 4%</strong></td><td>Data breach, unlawful processing, cross-border transfer</td></tr>
+      <tr><td colspan="3" style="font-size:12px;color:var(--text3)">উদাহরণ: Meta — €1.2 billion (2023) · Amazon — €746 million · Google — €50 million</td></tr>
+    </table>
+  </div>
+  <div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><div class="callout-title">GDPR + Pentesting Best Practice</div><div class="callout-text">EU client-এর pentest করলে: <strong>(1)</strong> DPA (Data Processing Agreement) sign করো, <strong>(2)</strong> Personal data তোমার system-এ store না করার চেষ্টা করো — শুধু proof-of-concept screenshot নাও, <strong>(3)</strong> Test শেষে সব personal data securely wipe করো, <strong>(4)</strong> Report-এ personal data mask করো (e.g., user@domain.com → u***@d***.com)।</div></div></div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s2-4">2.4 UK Data Protection Laws (UK GDPR & DPA 2018) <button class="bookmark-btn" onclick="addBookmark('s2-4','2.4 UK Laws')">🔖</button> <button class="section-complete-btn" data-sid="s2-4" onclick="toggleSection('s2-4')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Brexit-এর পর UK EU GDPR থেকে বের হয়ে নিজস্ব <strong>UK GDPR</strong> এবং <strong>Data Protection Act 2018 (DPA 2018)</strong> implement করেছে।</p>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>দিক</th><th>EU GDPR</th><th>UK GDPR + DPA 2018</th></tr>
+      <tr><td>Structure</td><td>EU Regulation</td><td>UK domestic law (retained post-Brexit)</td></tr>
+      <tr><td>Regulator</td><td>DPA of each EU member state</td><td>ICO (Information Commissioner's Office)</td></tr>
+      <tr><td>Max Fine</td><td>€20M / 4% global turnover</td><td>£17.5M / 4% global turnover</td></tr>
+      <tr><td>Core Principles</td><td class="vs-yes">✅ Same as EU GDPR</td><td class="vs-yes">✅ Essentially same</td></tr>
+      <tr><td>Data Transfer to EU</td><td>Adequacy decision needed</td><td>UK has EU adequacy (for now)</td></tr>
+    </table>
+  </div>
+
+  <h3 class="sub-title">UK-Specific: Computer Misuse Act 1990 (CMA)</h3>
+  <div class="callout warning"><div class="callout-icon">⚠️</div><div class="callout-body"><div class="callout-title">UK CMA এবং Pentesting</div><div class="callout-text">UK-তে <strong>Computer Misuse Act 1990</strong> unauthorized computer access criminalize করে। Section 1: Unauthorized access (6 months prison) · Section 2: Unauthorized access with intent (5 years) · Section 3: Unauthorized modification (10 years)। UK client-এর pentest করলে CMA-র explicit authorization language contract-এ থাকতে হবে।</div></div></div>
+
+  <div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><div class="callout-title">UK Pentest Industry — CREST</div><div class="callout-text">UK-তে CREST (Council of Registered Ethical Security Testers) হলো leading certifying body। Major UK organizations সাধারণত CREST-certified firm দিয়ে pentest করায়। UK market-এ কাজ করতে চাইলে CREST CRT (Certified Penetration Tester) certification valuable।</div></div></div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s2-5">2.5 India's Digital Personal Data Protection Act (DPDP Act) <button class="bookmark-btn" onclick="addBookmark('s2-5','2.5 India DPDP')">🔖</button> <button class="section-complete-btn" data-sid="s2-5" onclick="toggleSection('s2-5')" title="Mark as read">○ Mark Done</button></h2>
+  <p>India ২০২৩ সালে <strong>Digital Personal Data Protection Act (DPDP Act, 2023)</strong> পাস করেছে। এটি India-র প্রথম comprehensive data protection law।</p>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>বিষয়</th><th>DPDP Act 2023</th></tr>
+      <tr><td>Effective Date</td><td>২০২৩-এ passed; rules এখনো finalize হচ্ছে</td></tr>
+      <tr><td>Applicability</td><td>India-তে digital personal data processing; India-র বাইরে থেকেও India-র residents-এর data process করলে</td></tr>
+      <tr><td>Data Fiduciary</td><td>যে entity data process করে (organization)</td></tr>
+      <tr><td>Data Principal</td><td>যার data (individual)</td></tr>
+      <tr><td>Consent</td><td>Processing-এর জন্য consent mandatory (বা lawful purpose)</td></tr>
+      <tr><td>Max Penalty</td><td>₹250 crore (≈ $30 million) per violation</td></tr>
+      <tr><td>Data Breach Notification</td><td>Data Protection Board-কে notify করতে হবে</td></tr>
+    </table>
+  </div>
+
+  <h3 class="sub-title">India IT Act 2000 — Pentest Relevance</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Section</th><th>বিষয়</th><th>Relevance</th></tr>
+      <tr><td>43</td><td>Unauthorized computer access</td><td>Civil liability — damages দিতে হবে</td></tr>
+      <tr><td>66</td><td>Computer-related offenses</td><td>Criminal liability — ৩ বছর পর্যন্ত কারাদণ্ড</td></tr>
+      <tr><td>66C</td><td>Identity theft</td><td>৩ বছর + ₹1 lakh fine</td></tr>
+      <tr><td>66D</td><td>Cheating by computer</td><td>৩ বছর + ₹1 lakh fine</td></tr>
+      <tr><td>70</td><td>Protected system</td><td>Unauthorized access — ১০ বছর পর্যন্ত কারাদণ্ড</td></tr>
+    </table>
+  </div>
+  <div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><div class="callout-title">India Client Checklist</div><div class="callout-text">✅ IT Act + DPDP Act উভয়ের authorization language contract-এ রাখো &nbsp;|&nbsp; ✅ Aadhaar বা payment data access করলে extra caution (UIDAI Act, PCI DSS) &nbsp;|&nbsp; ✅ Personal data captured করলে India থেকে বের করার আগে DPDP compliance নিশ্চিত করো</div></div></div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s2-6">2.6 China's Data Protection & Cybersecurity Laws <button class="bookmark-btn" onclick="addBookmark('s2-6','2.6 China Laws')">🔖</button> <button class="section-complete-btn" data-sid="s2-6" onclick="toggleSection('s2-6')" title="Mark as read">○ Mark Done</button></h2>
+  <p>China-তে data protection তিনটি প্রধান আইন দ্বারা পরিচালিত হয়:</p>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>Law</th><th>Full Name</th><th>Effective</th><th>Focus</th></tr>
+      <tr><td><strong>CSL</strong></td><td>Cybersecurity Law</td><td>2017</td><td>Network security, critical infrastructure protection</td></tr>
+      <tr><td><strong>DSL</strong></td><td>Data Security Law</td><td>2021</td><td>Data classification, national data security</td></tr>
+      <tr><td><strong>PIPL</strong></td><td>Personal Information Protection Law</td><td>2021</td><td>Personal data protection (China-র GDPR)</td></tr>
+    </table>
+  </div>
+
+  <h3 class="sub-title">PIPL — Personal Information Protection Law</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>দিক</th><th>বিস্তারিত</th></tr>
+      <tr><td>Scope</td><td>China-তে PI processing; China-র nationals-এর data globally</td></tr>
+      <tr><td>Consent</td><td>Explicit, voluntary, informed consent mandatory</td></tr>
+      <tr><td>Sensitive Data</td><td>Biometrics, health, finance, location, minors — extra protection</td></tr>
+      <tr><td>Cross-border Transfer</td><td>Security assessment + PIPC approval required</td></tr>
+      <tr><td>Max Penalty</td><td>¥50 million বা annual revenue-এর 5%</td></tr>
+      <tr><td>Individual Liability</td><td>কর্মকর্তাকেও personally liable করা যায়</td></tr>
+    </table>
+  </div>
+
+  <h3 class="sub-title">CSL — Critical Infrastructure Protection</h3>
+  <div class="callout warning"><div class="callout-icon">⚠️</div><div class="callout-body"><div class="callout-title">China-তে Pentesting — Extra Caution</div><div class="callout-text">China-র CSL অনুযায়ী <strong>Critical Information Infrastructure (CII)</strong> operator-দের security testing বিশেষভাবে regulated। Foreign pentesting firm-এর জন্য restrictions আছে। China-র client-এর pentest করতে হলে: <strong>(1)</strong> Chinese law firm-এর সাথে consult করো, <strong>(2)</strong> Government approval লাগতে পারে, <strong>(3)</strong> Data localization requirement মেনে চলো।</div></div></div>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>আইন</th><th>Key Cybersecurity Obligation</th></tr>
+      <tr><td>CSL</td><td>Network operators-দের security protection system maintain করতে হবে; MLPS (Multi-Level Protection Scheme) compliance</td></tr>
+      <tr><td>DSL</td><td>Data classification system (General / Important / Core); cross-border data transfer restrictions</td></tr>
+      <tr><td>PIPL</td><td>Personal data processing consent; data localization; international transfer assessment</td></tr>
+    </table>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s2-compare">Jurisdiction Comparison — Quick Reference <button class="bookmark-btn" onclick="addBookmark('s2-compare','Law Comparison Table')">🔖</button> <button class="section-complete-btn" data-sid="s2-compare" onclick="toggleSection('s2-compare')" title="Mark as read">○ Mark Done</button></h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Country/Region</th><th>Main Law</th><th>Cybercrime Law</th><th>Max Fine</th><th>Regulator</th></tr>
+      <tr><td>🇧🇩 Bangladesh</td><td>DSA 2018, ICT Act 2006</td><td>DSA 2018</td><td>৳২৫ লক্ষ + কারাদণ্ড</td><td>BTRC, BGD e-Gov CIRT</td></tr>
+      <tr><td>🇺🇸 US</td><td>CFAA, CCPA, HIPAA, PCI DSS</td><td>CFAA</td><td>Varies (up to $25M HIPAA)</td><td>FTC, OCR, state AGs</td></tr>
+      <tr><td>🇪🇺 EU</td><td>GDPR</td><td>Member state laws</td><td>€20M / 4% turnover</td><td>National DPAs</td></tr>
+      <tr><td>🇬🇧 UK</td><td>UK GDPR, DPA 2018</td><td>Computer Misuse Act</td><td>£17.5M / 4% turnover</td><td>ICO</td></tr>
+      <tr><td>🇮🇳 India</td><td>DPDP Act 2023, IT Act 2000</td><td>IT Act 2000</td><td>₹250 crore</td><td>Data Protection Board</td></tr>
+      <tr><td>🇨🇳 China</td><td>PIPL, DSL, CSL</td><td>CSL</td><td>¥50M / 5% revenue</td><td>CAC, MPS</td></tr>
+    </table>
+  </div>
+
+  <div class="callout lab">
+    <div class="callout-icon">🧪</div>
+    <div class="callout-body">
+      <div class="callout-title">LAB 2.1 — Legal Scenario Analysis</div>
+      <div class="callout-text">
+        <strong>Scenario 1:</strong> তুমি ঢাকা থেকে একটি US e-commerce company-র pentest করছো। তারা EU customers-ও serve করে। কোন কোন laws apply হবে?<br>
+        → <em>Bangladesh DSA (তোমার location) + US CFAA (target company) + GDPR (EU customer data)</em><br><br>
+        <strong>Scenario 2:</strong> একটি Bangladesh bank-এর internal AD pentest করছো। তাদের India-তে একটি subsidiary আছে।<br>
+        → <em>Bangladesh DSA + BB Cybersecurity Framework + India IT Act (subsidiary scope-এ থাকলে)</em><br><br>
+        <strong>Key Lesson:</strong> International engagement-এ সবসময় <strong>multiple jurisdiction</strong> analysis করো। সবচেয়ে strict law-টি follow করো।
+      </div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <div class="callout info">
+    <div class="callout-icon">✅</div>
+    <div class="callout-body">
+      <div class="callout-title">Chapter 2 — Key Takeaways</div>
+      <div class="callout-text">
+        • Bangladesh: DSA 2018 + ICT Act — written permission না থাকলে criminal liability<br>
+        • US: CFAA সবচেয়ে গুরুত্বপূর্ণ + sector-specific (HIPAA, PCI DSS)<br>
+        • EU GDPR: সবচেয়ে strict — €20M পর্যন্ত fine, global reach<br>
+        • UK: UK GDPR + Computer Misuse Act — CREST certification valued<br>
+        • India: DPDP Act 2023 + IT Act 2000 — new but comprehensive<br>
+        • China: PIPL + DSL + CSL — cross-border restrictions, extra caution<br>
+        • Always: সবচেয়ে strict applicable law follow করো
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter-nav">
+    <div class="chapter-nav-btn" onclick="showPage('ch1')">
+      <div class="chapter-nav-label">← Previous</div>
+      <div class="chapter-nav-title">Chapter 1: Introduction</div>
+    </div>
+    <div class="chapter-nav-btn next" onclick="showPage('ch3')">
+      <div class="chapter-nav-label">Next →</div>
+      <div class="chapter-nav-title">Chapter 3: Scope &amp; Engagement</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ CHAPTER 3 PAGE ══════════════════ -->
+<div id="page-ch3" class="page">
+  <div class="chapter-eyebrow">Chapter 3</div>
+  <h1 class="chapter-title-main">Penetration Testing Scope &amp; Engagement</h1>
+  <h1 class="chapter-title-bn">পেনিট্রেশন টেস্টিং স্কোপ ও এনগেজমেন্ট</h1>
+
+  <div class="chapter-intro-card">
+    <div class="cic-label">এই chapter-এ যা থাকবে (click to jump)</div>
+    <div class="cic-topics">
+      <span class="cic-topic" onclick="scrollTo('s3-1')">3.1 Pre-engagement</span>
+      <span class="cic-topic" onclick="scrollTo('s3-2')">3.2 RFP &amp; Proposal</span>
+      <span class="cic-topic" onclick="scrollTo('s3-3')">3.3 Scoping Meeting</span>
+      <span class="cic-topic" onclick="scrollTo('s3-4')">3.4 Questionnaires</span>
+      <span class="cic-topic" onclick="scrollTo('s3-5')">3.5 Assessment Type</span>
+      <span class="cic-topic" onclick="scrollTo('s3-6')">3.6 Strategy</span>
+      <span class="cic-topic" onclick="scrollTo('s3-7')">3.7 Infrastructure</span>
+      <span class="cic-topic" onclick="scrollTo('s3-8')">3.8 Out-of-Scope</span>
+      <span class="cic-topic" onclick="scrollTo('s3-9')">3.9 Deliverables</span>
+      <span class="cic-topic" onclick="scrollTo('s3-10')">3.10 Reports</span>
+      <span class="cic-topic" onclick="scrollTo('s3-11')">3.11 Duration</span>
+      <span class="cic-topic" onclick="scrollTo('s3-12')">3.12 Staffing</span>
+      <span class="cic-topic" onclick="scrollTo('s3-13')">3.13 Cost Estimate</span>
+      <span class="cic-topic" onclick="scrollTo('s3-14')">3.14 Submission</span>
+      <span class="cic-topic" onclick="scrollTo('s3-15')">3.15 TMTT</span>
+      <span class="cic-topic" onclick="scrollTo('s3-16')">3.16 Comms</span>
+      <span class="cic-topic" onclick="scrollTo('s3-17')">3.17 TPC Call</span>
+      <span class="cic-topic" onclick="scrollTo('s3-18')">3.18 Timeline</span>
+      <span class="cic-topic" onclick="scrollTo('s3-19')">3.19 Meetings</span>
+      <span class="cic-topic" onclick="scrollTo('s3-20')">3.20 Time of Day</span>
+      <span class="cic-topic" onclick="scrollTo('s3-21')">3.21 Personnel</span>
+      <span class="cic-topic" onclick="scrollTo('s3-22')">3.22 ROE</span>
+      <span class="cic-topic" onclick="scrollTo('s3-23')">3.23 Engagement Letter</span>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-icon">ℹ️</div>
+    <div class="callout-body">
+      <div class="callout-title">এই Chapter কেন গুরুত্বপূর্ণ?</div>
+      <div class="callout-text">অনেক নতুন pentester মনে করে engagement মানেই শুধু hacking। কিন্তু একটি professional engagement-এর <strong>৩০-৪০% সময়</strong> যায় pre-engagement কাজে। Scope ঠিকমতো define না হলে — legal problem হতে পারে, client relationship নষ্ট হতে পারে, এবং তোমার কাজের কোনো মূল্যই থাকবে না।</div>
+    </div>
+  </div>
+
+  <div class="ascii-box"><pre>
+┌──────────────────────────────────────────────────────────────┐
+│              ENGAGEMENT LIFECYCLE                            │
+│                                                              │
+│  [RFP/Lead]──►[Proposal]──►[Scoping]──►[Contract/ROE]       │
+│                                              │               │
+│                                              ▼               │
+│                                    [Kick-off Call]           │
+│                                              │               │
+│                                              ▼               │
+│                             [Testing Phase] ──► [Reporting]  │
+│                                              │               │
+│                                              ▼               │
+│                                  [Debrief + Retest]          │
+└──────────────────────────────────────────────────────────────┘</pre></div>
+
+  <h2 class="section-title" id="s3-1">3.1 Pre-engagement Activities <button class="bookmark-btn" onclick="addBookmark('s3-1','3.1 Pre-engagement Activities')">🔖</button> <button class="section-complete-btn" data-sid="s3-1" onclick="toggleSection('s3-1')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Pre-engagement হলো pentest শুরুর আগের সব কাজ। কোনো technical কাজ এখানে নেই — কিন্তু এই phase সঠিকভাবে না করলে পুরো engagement ভেস্তে যেতে পারে।</p>
+
+  <ul class="checklist" id="pre-engagement-checklist">
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>RFP বা client lead receive করো</strong> — email, referral, বা direct inquiry</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>Initial NDA sign করো</strong> — আলোচনা শুরুর আগেই confidentiality নিশ্চিত করো</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>Client-কে questionnaire পাঠাও</strong> — scope বোঝার জন্য</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>Scoping call/meeting করো</strong> — scope, timeline, budget আলোচনা</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>Assessment type নির্ধারণ করো</strong> — Black/White/Grey Box</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>Testing areas identify করো</strong> — কোন systems, IPs, domains</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>Out-of-scope items define করো</strong> — কী test করা যাবে না</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>Proposal তৈরি করো</strong> — scope, timeline, cost, deliverables</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>Contract + ROE sign করো</strong> — legal protection নিশ্চিত করো</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>Kick-off call করো</strong> — সব stakeholder-কে align করো</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>Emergency contacts collect করো</strong> — testing-এর সময় কাকে call করবে</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text"><strong>Lab/tools setup করো</strong> — engagement শুরুর আগেই ready করো</span></li>
+  </ul>
+
+  <div class="callout tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body">
+      <div class="callout-title">Pro Tip — NDA আগে, কথা পরে</div>
+      <div class="callout-text">Client-এর infrastructure সম্পর্কে কোনো detail আলোচনার আগেই NDA sign করো। অনেক junior pentester NDA skip করে scoping শুরু করে দেয় — এটা ভুল। NDA ছাড়া sensitive information share করলে উভয়পক্ষের legal risk থাকে।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-2">3.2 Proposal Submission to RFP <button class="bookmark-btn" onclick="addBookmark('s3-2','3.2 RFP Proposal')">🔖</button> <button class="section-complete-btn" data-sid="s3-2" onclick="toggleSection('s3-2')" title="Mark as read">○ Mark Done</button></h2>
+  <p><strong>RFP (Request for Proposal)</strong> হলো client-এর পাঠানো একটি formal document যেখানে তারা কী চায় সেটা describe করা থাকে। Pentesting firm এই RFP-এর response-এ একটি Proposal পাঠায়।</p>
+
+  <h3 class="sub-title">RFP-এ সাধারণত কী থাকে?</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Section</th><th>কী থাকে</th></tr>
+      <tr><td>Project Overview</td><td>Client কী চায়, কেন চায়</td></tr>
+      <tr><td>Scope of Work</td><td>কোন systems, networks, apps test করতে হবে</td></tr>
+      <tr><td>Deliverables</td><td>কোন ধরনের report চাই</td></tr>
+      <tr><td>Timeline</td><td>কবে নাগাদ কাজ শেষ করতে হবে</td></tr>
+      <tr><td>Qualifications</td><td>Bidder-এর certification, experience requirement</td></tr>
+      <tr><td>Pricing Format</td><td>Fixed price নাকি T&amp;M (Time &amp; Materials)</td></tr>
+      <tr><td>Submission Deadline</td><td>Proposal কবে submit করতে হবে</td></tr>
+    </table>
+  </div>
+
+  <h3 class="sub-title">Proposal-এ কী কী থাকবে?</h3>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Template — Pentest Proposal Structure</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+    <pre><code>==================================================
+  PENETRATION TESTING PROPOSAL
+  [তোমার কোম্পানির নাম]
+  Prepared for: [Client Name]
+  Date: [Date]
+  Valid Until: [30 days from date]
+==================================================
+
+1. EXECUTIVE SUMMARY
+   - কী করবো, কেন করবো, কতটুকু সময় লাগবে
+
+2. UNDERSTANDING OF REQUIREMENTS
+   - Client-এর RFP বুঝেছি এটা দেখানো
+   - Specific pain points address করা
+
+3. PROPOSED SCOPE OF WORK
+   - In-scope systems (IP ranges, domains, apps)
+   - Out-of-scope items
+   - Testing types (external/internal/web app)
+
+4. METHODOLOGY
+   - PTES / OWASP / MITRE ATT&amp;CK reference
+   - Phase-by-phase breakdown
+
+5. PROJECT TIMELINE
+   - Start date, end date
+   - Milestone breakdown (Gantt format)
+
+6. TEAM &amp; QUALIFICATIONS
+   - Lead pentester: [Name, Certifications]
+   - Supporting team members
+   - Relevant past engagements (sanitized)
+
+7. DELIVERABLES
+   - Executive Report
+   - Technical Report
+   - Remediation Guidance
+   - Retest (if included)
+
+8. PRICING
+   - Itemized breakdown
+   - Payment terms
+
+9. TERMS &amp; CONDITIONS
+   - Legal references
+   - Liability limitations
+   - Confidentiality
+
+10. APPENDIX
+    - Sample report excerpt
+    - Team CVs / certifications
+==================================================</code></pre>
+  </div>
+
+  <div class="callout note">
+    <div class="callout-icon">📌</div>
+    <div class="callout-body">
+      <div class="callout-title">Fixed Price vs Time &amp; Materials</div>
+      <div class="callout-text"><strong>Fixed Price:</strong> Scope clearly defined হলে ব্যবহার করো। Scope creep হলে তোমার ক্ষতি। &nbsp;|&nbsp; <strong>T&amp;M (Time &amp; Materials):</strong> Hourly rate × hours। Scope fuzzy হলে বা complex engagement-এ safer। Client-এর budget নিয়ন্ত্রণ কম। &nbsp;|&nbsp; <strong>Recommendation:</strong> Small, well-defined scope → Fixed. Large, complex, unknown → T&amp;M।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-3">3.3 Pentesting Scoping Meeting <button class="bookmark-btn" onclick="addBookmark('s3-3','3.3 Scoping Meeting')">🔖</button> <button class="section-complete-btn" data-sid="s3-3" onclick="toggleSection('s3-3')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Scoping meeting হলো client-এর সাথে প্রথম technical আলোচনা। এই meeting-এ engagement-এর সব parameters নির্ধারণ হয়।</p>
+
+  <h3 class="sub-title">Meeting Agenda Template</h3>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Scoping Meeting Agenda</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+    <pre><code>PENTEST SCOPING MEETING AGENDA
+Date: ___________  Time: ___________
+Attendees: [Pentester Team] + [Client POC, IT Lead, CISO]
+
+1. INTRODUCTION (10 min)
+   - Team introductions
+   - Meeting objectives
+
+2. BUSINESS CONTEXT (15 min)
+   - Business-এর nature বোঝা
+   - Compliance requirement কী আছে
+   - Previous security incidents বা assessments
+
+3. SCOPE DEFINITION (30 min)
+   - In-scope systems, IPs, domains, apps
+   - Out-of-scope items
+   - Specific concerns বা high-value targets
+
+4. LOGISTICS (15 min)
+   - Testing window (কোন সময়ে test করবো)
+   - Testing approach (Black/Grey/White Box)
+   - Remote নাকি Onsite
+
+5. RULES OF ENGAGEMENT (20 min)
+   - কী করা যাবে, কী করা যাবে না
+   - DoS testing অনুমতি আছে কিনা
+   - Production vs staging environment
+
+6. COMMUNICATION PLAN (10 min)
+   - Daily status update format
+   - Emergency contact list
+   - Critical finding notification process
+
+7. DELIVERABLES &amp; TIMELINE (10 min)
+   - Report format, delivery date
+   - Retest included কিনা
+
+8. Q&amp;A (10 min)
+
+ACTION ITEMS: ___________________________</code></pre>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-4">3.4 Sample Questionnaires About Pentest <button class="bookmark-btn" onclick="addBookmark('s3-4','3.4 Questionnaires')">🔖</button> <button class="section-complete-btn" data-sid="s3-4" onclick="toggleSection('s3-4')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Client-কে এই questionnaire পাঠাও scoping call-এর আগে — যাতে তারা prepared হয়ে আসে।</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Client Pre-Engagement Questionnaire</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+    <pre><code>=== SECTION A: GENERAL INFORMATION ===
+
+1. আপনার organization-এর মূল business কী?
+2. কতজন কর্মী আছেন? (IT staff আলাদাভাবে)
+3. এর আগে কি কোনো pentest করা হয়েছে? হলে কখন?
+4. কী compliance requirement আছে? (PCI DSS, ISO 27001, Bangladesh Bank)
+5. কোনো recent security incident হয়েছে?
+
+=== SECTION B: NETWORK SCOPE ===
+
+6.  External IP address ranges কতগুলো? (CIDR notation-এ)
+7.  Domain names কতগুলো? সব list করুন।
+8.  Firewall/IDS/IPS আছে? কোন vendor?
+9.  Cloud infrastructure আছে? (AWS/Azure/GCP)
+10. VPN solution কী ব্যবহার করছেন?
+11. Internal network কতটি subnet? IP range?
+12. Wireless network (WiFi) আছে? Test করতে হবে?
+13. Remote access solution কী? (Citrix, RDP, etc.)
+
+=== SECTION C: WEB APPLICATION SCOPE ===
+
+14. কতটি web application test করতে হবে?
+15. Applications কি production-এ নাকি staging-এ test হবে?
+16. Login/authentication আছে? Credentials দেওয়া হবে?
+17. API endpoint আছে? API documentation দেওয়া হবে?
+18. Application কোন technology দিয়ে বানানো? (PHP, Node, Django)
+19. Source code access দেবেন? (White Box হলে)
+
+=== SECTION D: ACTIVE DIRECTORY / WINDOWS ===
+
+20. Active Directory আছে? Domain name কী?
+21. Domain Controller কতটি?
+22. Windows version কী? (Server 2016/2019/2022)
+23. Internal pentest-এ low-privilege credentials দেওয়া হবে?
+24. Specific AD misconfig test করতে হবে?
+
+=== SECTION E: LOGISTICS ===
+
+25. Testing window কখন? (Business hours / After hours / Weekend)
+26. Point of Contact (POC) কে? Name, phone, email।
+27. Emergency escalation contact কে?
+28. Testing শুরুর আগে কাউকে notify করতে হবে? (IT team, SOC)
+29. Onsite access দরকার? Physical location কোথায়?
+30. Testing শেষে debrief meeting করতে চান?</code></pre>
+  </div>
+
+  <div class="callout tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body">
+      <div class="callout-title">Pro Tip — Questionnaire কখন পাঠাবে?</div>
+      <div class="callout-text">Scoping call-এর <strong>৩-৫ দিন আগে</strong> পাঠাও। এতে client-এর IT team তাদের সব system inventory ready করতে পারবে। Scoping call-এ তখন সরাসরি decision নিতে পারবে — সময় নষ্ট হবে না।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-5">3.5 Identify The Pentest Assessment Types <button class="bookmark-btn" onclick="addBookmark('s3-5','3.5 Assessment Types')">🔖</button> <button class="section-complete-btn" data-sid="s3-5" onclick="toggleSection('s3-5')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Scoping meeting-এ assessment type confirm করো। Client অনেক সময় নিজেরা নিশ্চিত থাকে না — তোমার কাজ হলো তাদের guide করা।</p>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>Client বলছে…</th><th>আসলে কী দরকার</th><th>Recommend করো</th></tr>
+      <tr><td>"Hack করে দেখাও আমাদের কতটা vulnerable"</td><td>Realistic external attack simulation</td><td>Black Box External</td></tr>
+      <tr><td>"Code review সহ সব দেখতে চাই"</td><td>Comprehensive assessment</td><td>White Box</td></tr>
+      <tr><td>"আমাদের employee কতটা ক্ষতি করতে পারবে"</td><td>Insider threat simulation</td><td>Grey Box Internal (with low-priv creds)</td></tr>
+      <tr><td>"PCI DSS compliance দরকার"</td><td>Compliance-driven requirement</td><td>Black Box External + Internal (PTES-based)</td></tr>
+      <tr><td>"নতুন app launch করবো"</td><td>Pre-launch web app assessment</td><td>White Box Web App (OWASP)</td></tr>
+    </table>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <div class="callout-title">Client Confusion — Document Everything</div>
+      <div class="callout-text">Client যদি meeting-এ এক কথা বলে এবং পরে অন্য কথা বলে — এটা common। তাই scoping meeting-এর পর <strong>email-এ সব confirm করো</strong>। "আমাদের আলোচনা অনুযায়ী assessment type হবে: Grey Box External + Web App…" এই ধরনের confirmation email পাঠাও।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-6">3.6 Identify Testing Strategy <button class="bookmark-btn" onclick="addBookmark('s3-6','3.6 Testing Strategy')">🔖</button> <button class="section-complete-btn" data-sid="s3-6" onclick="toggleSection('s3-6')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Assessment type ছাড়াও testing strategy scoping-এ confirm করতে হবে:</p>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>Strategy</th><th>IT Team জানে?</th><th>Use Case</th><th>Client Approval</th></tr>
+      <tr><td><strong>Targeted (Lights-on)</strong></td><td class="vs-yes">✅ হ্যাঁ</td><td>Collaborative, knowledge-sharing</td><td>সহজ — কম resistance</td></tr>
+      <tr><td><strong>Blind</strong></td><td class="vs-no">❌ না</td><td>SOC readiness test</td><td>Management approval must</td></tr>
+      <tr><td><strong>Double-Blind</strong></td><td class="vs-no">❌ না (Management-ও almost না)</td><td>Ultimate realism</td><td>Board-level sign-off দরকার</td></tr>
+    </table>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <div class="callout-title">Blind Testing-এর বিপদ</div>
+      <div class="callout-text">Blind testing-এ IT team জানে না যে pentest হচ্ছে। তারা attack মনে করে তোমাকে block বা report করতে পারে। এমনকি police call করার ঘটনাও আছে। <strong>Get-Out-of-Jail Card</strong> (Section 3.22) সবসময় সাথে রাখো এবং management-এর emergency contact ready রাখো।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-7">3.7 Identify the Areas of Infrastructure to Test <button class="bookmark-btn" onclick="addBookmark('s3-7','3.7 Infrastructure Areas')">🔖</button> <button class="section-complete-btn" data-sid="s3-7" onclick="toggleSection('s3-7')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Scope clearly define করো — ambiguous scope থেকে বেশিরভাগ legal problem আসে।</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Scope Definition Template</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+    <pre><code>=== IN-SCOPE ITEMS ===
+
+EXTERNAL NETWORK:
+  IP Ranges:
+    - 203.0.113.0/24        (Primary public range)
+    - 198.51.100.10-50      (Mail server cluster)
+  Domains:
+    - example.com
+    - mail.example.com
+    - vpn.example.com
+
+WEB APPLICATIONS:
+    - https://www.example.com        (Main site)
+    - https://app.example.com        (Customer portal)
+    - https://admin.example.com      (Admin panel)
+
+INTERNAL NETWORK (Internal Testing):
+    - 192.168.1.0/24        (Office LAN)
+    - 10.0.0.0/16           (Server segment)
+    - Active Directory: corp.local
+
+WIRELESS:
+    - SSID: "CorpWiFi" (WPA2 Enterprise)
+
+=== OUT-OF-SCOPE ITEMS (Section 3.8 দেখো) ===
+
+=== TESTING TYPE PER AREA ===
+    - External Network:   Black Box
+    - Web Applications:   Grey Box (with test accounts)
+    - Internal Network:   Grey Box (with low-priv domain user)
+    - Wireless:           Black Box</code></pre>
+  </div>
+
+  <div class="callout tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body">
+      <div class="callout-title">Third-Party / Shared Hosting সতর্কতা</div>
+      <div class="callout-text">যদি target website shared hosting-এ থাকে (একই server-এ অন্যের site আছে), তাহলে hosting provider-এর permission-ও লাগতে পারে। Cloud-hosted assets (AWS, Azure)-এর ক্ষেত্রেও provider-এর acceptable use policy পড়ো। AWS-এর নিজস্ব pentest policy আছে — test শুরুর আগে check করো।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-8">3.8 Out-of-Scope — Tests Not to Be Performed <button class="bookmark-btn" onclick="addBookmark('s3-8','3.8 Out-of-Scope')">🔖</button> <button class="section-complete-btn" data-sid="s3-8" onclick="toggleSection('s3-8')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Out-of-scope define করা In-scope define করার মতোই গুরুত্বপূর্ণ। এটা না থাকলে তুমি কোনো system-এ test করলে পরে client বলতে পারবে "এটা তো আমি বলিনি"।</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Out-of-Scope Template</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+    <pre><code>=== OUT-OF-SCOPE ITEMS ===
+
+SYSTEMS:
+  - 10.0.0.1        (CEO workstation — sensitive data)
+  - 192.168.1.50    (Legacy medical device — fragile)
+  - Third-party vendor systems (unless their permission obtained)
+
+TESTING TYPES:
+  - Social engineering / phishing of employees
+  - Physical penetration testing (building access)
+  - Denial of Service (DoS/DDoS) attacks
+  - Destructive testing (data deletion, ransomware simulation)
+  - Tests against third-party services (Salesforce, AWS hosted SaaS)
+
+HOURS:
+  - Testing NOT permitted on: Fridays 6pm to Monday 8am
+  - NOT during: [specific business events, product launches]
+  - NOT during: month-end financial closing (1st–3rd of each month)
+
+ACTIONS:
+  - Do NOT access, copy, or exfiltrate real customer data
+  - Do NOT modify or delete any production data
+  - Do NOT create persistent backdoors without explicit approval
+  - Do NOT test systems outside agreed IP ranges
+  - Do NOT conduct attacks from third-party hosting</code></pre>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <div class="callout-title">Scope Creep — সবচেয়ে বড় বিপদ</div>
+      <div class="callout-text">Testing করতে করতে অনেক সময় tempting লাগে — "এই system-টা দেখি, কী হয়"। <strong>কখনো করবে না।</strong> Scope-এর বাইরে একটি IP-ও test করলে সেটা legally unauthorized access। তুমি যদি কোনো interesting system খুঁজে পাও যেটা scope-এ নেই — তা report-এ mention করো এবং client-কে জিজ্ঞেস করো scope expand করতে চায় কিনা।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-9">3.9 Determining Project Deliverables <button class="bookmark-btn" onclick="addBookmark('s3-9','3.9 Deliverables')">🔖</button> <button class="section-complete-btn" data-sid="s3-9" onclick="toggleSection('s3-9')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Client engagement শেষে কী পাবে সেটা আগেই define করো। Deliverables অস্পষ্ট থাকলে scope dispute হয়।</p>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>Deliverable</th><th>কী থাকে</th><th>Who Reads It</th></tr>
+      <tr><td><strong>Executive Report</strong></td><td>Non-technical summary, risk overview, business impact, key recommendations</td><td>CEO, CISO, Board</td></tr>
+      <tr><td><strong>Technical Report</strong></td><td>All findings, CVSS scores, PoC screenshots, remediation steps</td><td>IT Team, Developers</td></tr>
+      <tr><td><strong>Vulnerability Matrix</strong></td><td>Excel/table format findings list — priority-based</td><td>IT Team for tracking</td></tr>
+      <tr><td><strong>Raw Tool Output</strong></td><td>Nmap scans, Nessus reports, raw logs</td><td>Advanced IT/Security team</td></tr>
+      <tr><td><strong>Retest Report</strong></td><td>After remediation — verify fixes</td><td>IT Team, Compliance</td></tr>
+      <tr><td><strong>Attestation Letter</strong></td><td>Formal letter confirming pentest completed (for compliance)</td><td>Auditors, Regulators</td></tr>
+    </table>
+  </div>
+
+  <div class="callout note">
+    <div class="callout-icon">📌</div>
+    <div class="callout-body">
+      <div class="callout-title">Retest কি Included?</div>
+      <div class="callout-text">Retest মানে: client findings fix করার পর তুমি আবার verify করো যে সত্যিই fixed হয়েছে। এটা <strong>separate engagement</strong> বা original scope-এ include করা যায়। Typically original engagement-এ একটি free retest (critical findings only) include করলে client সন্তুষ্ট থাকে। All findings-এর retest হলে সেটা pricing-এ আলাদা রাখো।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-10">3.10 Reports to Deliver After Pentest <button class="bookmark-btn" onclick="addBookmark('s3-10','3.10 Reports')">🔖</button> <button class="section-complete-btn" data-sid="s3-10" onclick="toggleSection('s3-10')" title="Mark as read">○ Mark Done</button></h2>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>Report Type</th><th>Format</th><th>When Delivered</th><th>Standard Length</th></tr>
+      <tr><td>Draft Report</td><td>PDF/Word</td><td>Testing শেষে ৩-৫ দিনের মধ্যে</td><td>Variable</td></tr>
+      <tr><td>Final Report</td><td>PDF (signed)</td><td>Client feedback-এর পর ২ দিনের মধ্যে</td><td>20-100+ pages</td></tr>
+      <tr><td>Executive Summary</td><td>PDF (standalone)</td><td>Final report-এর সাথে</td><td>2-5 pages</td></tr>
+      <tr><td>Retest Report</td><td>PDF</td><td>Remediation verify করার পর</td><td>5-20 pages</td></tr>
+      <tr><td>Attestation Letter</td><td>PDF (letterhead)</td><td>On request</td><td>1 page</td></tr>
+    </table>
+  </div>
+
+  <div class="callout tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body">
+      <div class="callout-title">Draft Report পাঠানো কেন জরুরি?</div>
+      <div class="callout-text">Final report পাঠানোর আগে <strong>Draft</strong> পাঠাও। Client তখন factual errors (ভুল IP, ভুল system name) correct করতে পারবে। এতে তোমার credibility বাড়ে। কিন্তু মনে রেখো — draft-এ findings change করা যাবে না, শুধু factual errors correct করা যাবে।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-11">3.11 Specifying The Test Duration <button class="bookmark-btn" onclick="addBookmark('s3-11','3.11 Test Duration')">🔖</button> <button class="section-complete-btn" data-sid="s3-11" onclick="toggleSection('s3-11')" title="Mark as read">○ Mark Done</button></h2>
+  <p>কতদিন test করবে সেটা scope-এর উপর নির্ভর করে। Common rule of thumb:</p>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>Engagement Type</th><th>Typical Duration</th><th>রিপোর্ট তৈরিতে আরো</th></tr>
+      <tr><td>Single Web App (Grey Box)</td><td>3-5 days testing</td><td>2-3 days</td></tr>
+      <tr><td>External Network (small, &lt;20 IPs)</td><td>3-5 days</td><td>2-3 days</td></tr>
+      <tr><td>External + Internal Network</td><td>1-2 weeks</td><td>3-5 days</td></tr>
+      <tr><td>Full Scope (Network + Web + AD)</td><td>2-4 weeks</td><td>5-7 days</td></tr>
+      <tr><td>Red Team Operation</td><td>4-12 weeks</td><td>1-2 weeks</td></tr>
+    </table>
+  </div>
+
+  <div class="callout note">
+    <div class="callout-icon">📌</div>
+    <div class="callout-body">
+      <div class="callout-title">Testing vs Reporting Time</div>
+      <div class="callout-text">অনেক নতুন pentester শুধু testing time estimate করে, reporting time ভুলে যায়। একটি ভালো report লিখতে testing-এর ৩০-৫০% সময় লাগে। Client-কে timeline দেওয়ার সময় <strong>testing + reporting time</strong> উভয়ই include করো।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-12">3.12 Project Team Staffing <button class="bookmark-btn" onclick="addBookmark('s3-12','3.12 Team Staffing')">🔖</button> <button class="section-complete-btn" data-sid="s3-12" onclick="toggleSection('s3-12')" title="Mark as read">○ Mark Done</button></h2>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>Role</th><th>Responsibility</th><th>Engagement Size</th></tr>
+      <tr><td><strong>Lead Pentester</strong></td><td>Technical lead, client POC, report quality</td><td>সব engagement-এ</td></tr>
+      <tr><td><strong>Project Manager</strong></td><td>Timeline, communication, invoicing</td><td>Large engagement</td></tr>
+      <tr><td><strong>Junior Pentester</strong></td><td>Reconnaissance, scanning, initial exploitation</td><td>Medium-Large</td></tr>
+      <tr><td><strong>Specialist</strong></td><td>AD expert, cloud specialist, mobile app tester</td><td>Specialized scope</td></tr>
+      <tr><td><strong>Report Writer</strong></td><td>Professional report writing, editing</td><td>Large firm</td></tr>
+    </table>
+  </div>
+
+  <div class="callout tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body">
+      <div class="callout-title">Solo Pentester হিসেবে কী করবে?</div>
+      <div class="callout-text">Freelancer বা small firm হলে তুমিই সব role। এই ক্ষেত্রে <strong>scope carefully limit করো</strong> — যতটুকু একা ভালোভাবে করতে পারবে ততটুকুই নাও। Over-commit করে under-deliver করা তোমার reputation নষ্ট করবে।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-13">3.13 Estimated Cost of Pentest Engagement <button class="bookmark-btn" onclick="addBookmark('s3-13','3.13 Cost Estimation')">🔖</button> <button class="section-complete-btn" data-sid="s3-13" onclick="toggleSection('s3-13')" title="Mark as read">○ Mark Done</button></h2>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Cost Estimation Worksheet</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+    <pre><code>=== PENTEST COST ESTIMATION WORKSHEET ===
+
+A. TESTING EFFORT (Man-days × Daily Rate)
+   Lead Pentester:    ___ days × ৳___/day  = ৳_______
+   Junior Pentester:  ___ days × ৳___/day  = ৳_______
+   Specialist:        ___ days × ৳___/day  = ৳_______
+   Subtotal (Testing):                       ৳_______
+
+B. REPORTING EFFORT
+   Report Writing:    ___ days × ৳___/day  = ৳_______
+   QA/Review:         ___ days × ৳___/day  = ৳_______
+   Subtotal (Reporting):                     ৳_______
+
+C. TRAVEL &amp; LOGISTICS (Onsite only)
+   Travel:                                   ৳_______
+   Accommodation:                            ৳_______
+   Subtotal (Travel):                        ৳_______
+
+D. TOOLS &amp; LICENSES
+   Special tools/licenses (if any):          ৳_______
+
+E. RETEST (if included)
+   Retest effort:     ___ days × ৳___/day  = ৳_______
+
+─────────────────────────────────────────────────────
+SUBTOTAL:                                    ৳_______
+Overhead/Profit Margin (20-30%):             ৳_______
+─────────────────────────────────────────────────────
+TOTAL PROPOSED PRICE:                        ৳_______
+─────────────────────────────────────────────────────
+
+Payment Terms: 50% upfront, 50% on report delivery</code></pre>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-14">3.14 Submitting the Proposal <button class="bookmark-btn" onclick="addBookmark('s3-14','3.14 Proposal Submission')">🔖</button> <button class="section-complete-btn" data-sid="s3-14" onclick="toggleSection('s3-14')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Proposal submit করার আগের checklist:</p>
+
+  <ul class="checklist">
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text">Proposal-এ client-এর নাম, date, scope সঠিক আছে কিনা review করো</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text">Pricing accurate এবং margin include করা আছে</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text">Timeline realistic কিনা বিবেচনা করো</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text">Team qualifications এবং certifications included</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text">Legal terms এবং liability clauses included</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text">Proposal validity date clearly stated (usually 30 days)</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text">Proposal PDF format-এ, professional letterhead-এ</span></li>
+    <li><div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text">Cover email-এ brief summary দাও</span></li>
+  </ul>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-15">3.15 Brainstorming Sessions with TMTT <button class="bookmark-btn" onclick="addBookmark('s3-15','3.15 TMTT Brainstorming')">🔖</button> <button class="section-complete-btn" data-sid="s3-15" onclick="toggleSection('s3-15')" title="Mark as read">○ Mark Done</button></h2>
+  <p><strong>TMTT (Test Manager &amp; Test Team)</strong> — এটা তোমার নিজের team-এর internal planning session।</p>
+  <p>Client থেকে scope পাওয়ার পর পুরো pentest team মিলে বসো এবং plan করো:</p>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>Brainstorming Topic</th><th>কী আলোচনা হবে</th></tr>
+      <tr><td>Attack Surface Analysis</td><td>In-scope systems-এ কোন attack vectors থাকতে পারে?</td></tr>
+      <tr><td>Tool Selection</td><td>কোন tools ব্যবহার করবো? কোনো custom script দরকার?</td></tr>
+      <tr><td>Role Division</td><td>কে কোন অংশ করবে? Lead কে?</td></tr>
+      <tr><td>Risk Areas</td><td>কোথায় সতর্ক থাকতে হবে? (Production systems, fragile services)</td></tr>
+      <tr><td>Timeline Planning</td><td>কোন phase কতদিন নেবে?</td></tr>
+      <tr><td>Assumptions &amp; Limitations</td><td>কী assume করছি? কী limitation আছে?</td></tr>
+      <tr><td>Threat Modeling</td><td>MITRE ATT&amp;CK-এর কোন TTPs relevant?</td></tr>
+    </table>
+  </div>
+
+  <div class="callout tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body">
+      <div class="callout-title">Threat Modeling করো</div>
+      <div class="callout-text">Brainstorming session-এ MITRE ATT&amp;CK framework খোলো এবং target industry-র common attack pattern দেখো। Banking sector-এ কোন TTPs বেশি use হয়? Healthcare-এ? এই context তোমার testing-এ priority set করতে সাহায্য করবে।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-16">3.16 Establishing Communication Lines <button class="bookmark-btn" onclick="addBookmark('s3-16','3.16 Communication Lines')">🔖</button> <button class="section-complete-btn" data-sid="s3-16" onclick="toggleSection('s3-16')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Testing চলাকালীন communication plan আগেই define করো:</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Communication Plan Template</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+    <pre><code>=== COMMUNICATION PLAN ===
+
+PRIMARY POC (CLIENT):
+  Name:   ___________________
+  Email:  ___________________
+  Phone:  ___________________
+  Hours:  ___ AM – ___ PM
+
+SECONDARY POC / ESCALATION:
+  Name:   ___________________
+  Email:  ___________________
+  Phone:  ___________________
+
+EMERGENCY CONTACT (24/7):
+  Name:   ___________________
+  Phone:  ___________________
+  (যদি testing রাতে হয় বা critical issue হয়)
+
+PENTEST TEAM POC:
+  Lead:   ___________________
+  Email:  ___________________
+  Phone:  ___________________
+
+STATUS UPDATE SCHEDULE:
+  Format:   Daily email update (end of each testing day)
+  Template: Tested areas | Findings summary | Next day plan
+
+CRITICAL FINDING NOTIFICATION:
+  Threshold:  CVSS 9.0+ (Critical) findings
+  Method:     Phone call immediately + email within 1 hour
+  Reason:     Client-কে জানানো দরকার যাতে তারা decide করতে
+              পারে testing চালু রাখবে কিনা
+
+ENCRYPTED COMMUNICATION:
+  Report delivery: Encrypted PDF (password shared separately)
+  Sensitive data:  ProtonMail / Signal (if needed)</code></pre>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <div class="callout-title">Critical Finding — Immediately Notify করো</div>
+      <div class="callout-text">Testing-এর সময় যদি এমন কিছু পাও যা real-time business impact ফেলতে পারে (যেমন: production DB সম্পূর্ণ exposed, payment data accessible) — <strong>test pause করো এবং সাথে সাথে client-কে call করো।</strong> Report পর্যন্ত অপেক্ষা করা যাবে না।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-17">3.17 Initial Teleconference with TPC <button class="bookmark-btn" onclick="addBookmark('s3-17','3.17 Kick-off Call')">🔖</button> <button class="section-complete-btn" data-sid="s3-17" onclick="toggleSection('s3-17')" title="Mark as read">○ Mark Done</button></h2>
+  <p><strong>TPC (Test Point of Contact)</strong> হলো client-এর যে ব্যক্তি technical side handle করে (সাধারণত IT Manager বা CISO)। Testing শুরুর আগে TPC-এর সাথে একটি kick-off call করো।</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Kick-off Call Agenda</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+    <pre><code>KICK-OFF CALL AGENDA
+Duration: 30-45 minutes
+
+1. INTRODUCTIONS (5 min)
+   - Team introductions (উভয় পক্ষ)
+
+2. SCOPE FINAL CONFIRMATION (10 min)
+   - In-scope IP list / domains — confirm করো
+   - Any last-minute changes?
+   - Out-of-scope items re-confirm
+
+3. LOGISTICS CONFIRMATION (10 min)
+   - Testing start date and end date
+   - Testing hours confirmed
+   - VPN/access credentials (internal test হলে)
+   - Whitelisting needed? (Firewall/IDS/IPS bypass)
+
+4. EMERGENCY PROCEDURES (5 min)
+   - Who to call if something breaks
+   - How to pause testing immediately if needed
+   - "Safe word" বা abort signal
+
+5. COMMUNICATION (5 min)
+   - Daily update time এবং format
+   - Critical finding notification agreed
+
+6. Q&amp;A (5-10 min)
+
+ACTION: Meeting minutes পাঠাও within 24 hours</code></pre>
+  </div>
+
+  <div class="callout note">
+    <div class="callout-icon">📌</div>
+    <div class="callout-body">
+      <div class="callout-title">Whitelisting — করবে নাকি করবে না?</div>
+      <div class="callout-text">Client অনেক সময় তোমার IP whitelist করতে চাইবে যাতে IDS/IPS block না করে। এটা করলে <strong>realistic testing হয় না</strong> — কারণ real attacker whitelisted থাকে না। তোমার recommendation: whitelisting <strong>ছাড়াই</strong> test করো। তবে যদি Client insist করে, তাহলে report-এ clearly mention করো যে IDS/IPS bypass করার জন্য whitelisting করা হয়েছে।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-18">3.18 Drafting a Timeline for Pentest Project <button class="bookmark-btn" onclick="addBookmark('s3-18','3.18 Project Timeline')">🔖</button> <button class="section-complete-btn" data-sid="s3-18" onclick="toggleSection('s3-18')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Project timeline (Gantt chart style) তৈরি করো — client এবং team উভয়ের জন্য।</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Sample Project Timeline — 2-Week Engagement</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+    <pre><code>PENTEST PROJECT TIMELINE
+Client: [Client Name]  |  Start: Day 1  |  End: Day 14
+
+WEEK 1: TESTING PHASE
+────────────────────────────────────────────────────────
+Day 1   │ Kick-off call, tool setup, initial recon
+Day 2   │ External network scanning, enumeration
+Day 3   │ External exploitation attempts
+Day 4   │ Web application testing — Part 1
+Day 5   │ Web application testing — Part 2
+────────────────────────────────────────────────────────
+
+WEEK 2: TESTING + REPORTING
+────────────────────────────────────────────────────────
+Day 6   │ Internal network access, AD enumeration
+Day 7   │ Internal exploitation, privilege escalation
+Day 8   │ Post-exploitation, data access verification
+Day 9   │ Cleanup, notes consolidation, findings review
+Day 10  │ Report writing — Technical findings
+────────────────────────────────────────────────────────
+
+REPORTING PHASE (Day 10-14)
+────────────────────────────────────────────────────────
+Day 10-11 │ Technical report draft
+Day 12    │ Executive summary writing
+Day 13    │ Internal QA review, screenshots, formatting
+Day 14    │ Draft report delivery to client
+Day 16    │ (Client feedback window)
+Day 18    │ Final report delivery
+────────────────────────────────────────────────────────
+
+RETEST PHASE (if included — +5 days after client remediation)
+Day R+1 to R+3 │ Retest critical and high findings
+Day R+4 to R+5 │ Retest report delivery</code></pre>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-19">3.19 Frequency of Meetings <button class="bookmark-btn" onclick="addBookmark('s3-19','3.19 Meeting Frequency')">🔖</button> <button class="section-complete-btn" data-sid="s3-19" onclick="toggleSection('s3-19')" title="Mark as read">○ Mark Done</button></h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Meeting Type</th><th>Frequency</th><th>Format</th><th>Duration</th></tr>
+      <tr><td>Daily Status Update</td><td>Every testing day</td><td>Email (async)</td><td>N/A</td></tr>
+      <tr><td>Weekly Check-in</td><td>Once per week</td><td>Video call</td><td>15-30 min</td></tr>
+      <tr><td>Mid-point Review</td><td>Midway through engagement</td><td>Video call</td><td>30-60 min</td></tr>
+      <tr><td>Critical Finding Call</td><td>As needed (CVSS 9+)</td><td>Phone / Immediate</td><td>15-30 min</td></tr>
+      <tr><td>Report Debrief</td><td>After draft report</td><td>Video call / Onsite</td><td>60-90 min</td></tr>
+      <tr><td>Retest Debrief</td><td>After retest</td><td>Email / Call</td><td>30 min</td></tr>
+    </table>
+  </div>
+
+  <div class="callout tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body">
+      <div class="callout-title">Daily Email Update Template</div>
+      <div class="callout-text"><strong>Subject:</strong> [ClientName] Pentest — Day [N] Status Update<br><strong>Body:</strong> ১. আজকে কী test করলাম, ২. Key findings summary (severity সহ), ৩. কোনো issue বা blocker, ৪. আগামীকালের plan। এটা 5-10 লাইনের বেশি না। Client চায় জানতে — কিন্তু technical detail report-এর জন্য রাখো।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-20">3.20 Deciding the Time of Day for Pentest <button class="bookmark-btn" onclick="addBookmark('s3-20','3.20 Time of Day')">🔖</button> <button class="section-complete-btn" data-sid="s3-20" onclick="toggleSection('s3-20')" title="Mark as read">○ Mark Done</button></h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Testing Window</th><th>✅ Advantages</th><th>❌ Disadvantages</th><th>When to Use</th></tr>
+      <tr><td><strong>Business Hours</strong></td><td>IT staff available, quick escalation</td><td>Traffic noise থেকে তোমার traffic আলাদা করা কঠিন</td><td>Most engagements default</td></tr>
+      <tr><td><strong>After Hours / Night</strong></td><td>Less traffic noise, real attack simulation</td><td>IT support available না, risky if something breaks</td><td>Stealth testing, Red Team</td></tr>
+      <tr><td><strong>Weekend</strong></td><td>No business disruption, full system access</td><td>Emergency support নেই, production backup নাও থাকতে পারে</td><td>Intrusive testing (DoS-adjacent)</td></tr>
+    </table>
+  </div>
+
+  <div class="callout note">
+    <div class="callout-icon">📌</div>
+    <div class="callout-body">
+      <div class="callout-title">Bangladesh-Specific: জুমআর দিন</div>
+      <div class="callout-text">বাংলাদেশে শুক্রবার অনেক organization-এ IT staff কম থাকে। বড় testing (যেমন: exploitation) শুক্রবার না করা ভালো যদি না client explicitly agree করে। এবং Ramadan মাসে office hours পরিবর্তিত হয় — client-কে জিজ্ঞেস করো।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-21">3.21 Identify Personnel for Assistance <button class="bookmark-btn" onclick="addBookmark('s3-21','3.21 Support Personnel')">🔖</button> <button class="section-complete-btn" data-sid="s3-21" onclick="toggleSection('s3-21')" title="Mark as read">○ Mark Done</button></h2>
+  <p>Testing-এর সময় client-এর কোন কোন ব্যক্তির সহায়তা লাগতে পারে সেটা আগেই identify করো:</p>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>Personnel</th><th>কখন দরকার</th><th>কী সহায়তা করবে</th></tr>
+      <tr><td>Network Admin</td><td>Internal testing-এ</td><td>VLAN access, firewall rule, IP confirmation</td></tr>
+      <tr><td>System Admin</td><td>Server testing-এ</td><td>System reboot if crash, snapshot restore</td></tr>
+      <tr><td>Developer</td><td>White box web app testing-এ</td><td>Source code access, API documentation</td></tr>
+      <tr><td>DBA</td><td>Database-related testing-এ</td><td>Database schema, sample data</td></tr>
+      <tr><td>CISO/Security Team</td><td>Throughout</td><td>Decisions on scope expansion, escalation</td></tr>
+      <tr><td>Legal/Compliance</td><td>If regulatory data accessed</td><td>Data handling guidance</td></tr>
+    </table>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-22">3.22 Signing ROE Documents <button class="bookmark-btn" onclick="addBookmark('s3-22','3.22 Rules of Engagement')">🔖</button> <button class="section-complete-btn" data-sid="s3-22" onclick="toggleSection('s3-22')" title="Mark as read">○ Mark Done</button></h2>
+  <p><strong>ROE (Rules of Engagement)</strong> হলো pentest-এর সবচেয়ে important legal document। এটা scope, constraints, এবং permissions সব define করে।</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">ROE Document Template</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+    <pre><code>=====================================
+RULES OF ENGAGEMENT (ROE)
+=====================================
+Date:           ___________________
+Client:         ___________________
+Pentesting Firm:___________________
+Engagement Type:___________________
+Testing Period: ___ to ___
+
+1. AUTHORIZED SYSTEMS
+   The following systems are authorized for testing:
+   [List of IPs, domains, applications]
+
+2. TESTING METHODS PERMITTED
+   ✅ Port scanning and enumeration
+   ✅ Vulnerability scanning (non-destructive)
+   ✅ Manual exploitation of identified vulnerabilities
+   ✅ Privilege escalation
+   ✅ Lateral movement
+   ✅ Password attacks (offline cracking)
+   ✅ Social engineering (if agreed)
+
+3. TESTING METHODS PROHIBITED
+   ❌ Denial of Service (DoS/DDoS)
+   ❌ Destructive payloads (ransomware, wiper)
+   ❌ Data exfiltration of real customer data
+   ❌ Physical intrusion (unless agreed)
+   ❌ Testing out-of-scope systems
+
+4. TESTING HOURS
+   Permitted:  Monday–Thursday, 09:00–18:00 BST
+   Restricted: Friday–Sunday without prior approval
+
+5. EMERGENCY STOP PROCEDURE
+   If critical issue arises, pentester will:
+   a) Immediately stop all testing
+   b) Call emergency contact: [Phone]
+   c) Send email: [Email]
+   d) Document what was happening
+
+6. DATA HANDLING
+   - Captured credentials: stored encrypted, deleted post-engagement
+   - PII encountered: not to be exfiltrated, to be noted only
+   - Report storage: encrypted, deleted 90 days post-delivery
+
+7. LEGAL AUTHORIZATION
+   This document constitutes written authorization for the
+   above-listed testing activities under:
+   [Bangladesh DSA 2018 / US CFAA / UK CMA — as applicable]
+
+8. SIGNATURES
+   Client Representative: _____________ Date: _____
+   Title: _____________
+   
+   Pentesting Lead:       _____________ Date: _____
+   Title: _____________
+=====================================</code></pre>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <div class="callout-title">ROE ছাড়া Testing = Illegal</div>
+      <div class="callout-text">ROE sign হওয়ার আগে <strong>একটি packet-ও পাঠাবে না</strong> target-এ। এমনকি একটি ping-ও না। ROE হলো তোমার legal shield। এটা ছাড়া তুমি criminal hacker-এর মতো same position-এ আছো।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <h2 class="section-title" id="s3-23">3.23 Engagement Letter from Client <button class="bookmark-btn" onclick="addBookmark('s3-23','3.23 Engagement Letter')">🔖</button> <button class="section-complete-btn" data-sid="s3-23" onclick="toggleSection('s3-23')" title="Mark as read">○ Mark Done</button></h2>
+  <p>ROE ছাড়াও client-এর কাছ থেকে একটি <strong>Engagement Letter</strong> নাও। এটা client-এর official letterhead-এ থাকবে।</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Engagement Letter Template (Client-এর Letterhead-এ)</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+    <pre><code>[CLIENT COMPANY LETTERHEAD]
+Date: ___________________
+
+To Whom It May Concern,
+
+This letter confirms that [PENTESTING FIRM NAME] has been
+formally engaged by [CLIENT COMPANY NAME] to conduct a
+penetration testing assessment of our IT infrastructure.
+
+AUTHORIZED SCOPE:
+The following systems, networks, and applications are
+authorized for security testing:
+  - [List in-scope items]
+
+TESTING PERIOD:
+  From: [Start Date]  To:  [End Date]
+
+AUTHORIZATION:
+The personnel of [PENTESTING FIRM NAME] are hereby authorized
+to conduct security testing activities as defined in the
+accompanying Rules of Engagement document dated [ROE Date].
+
+This letter serves as written authorization under applicable
+laws including [relevant jurisdiction laws].
+
+Any questions should be directed to:
+  [CISO / IT Manager Name]
+  [Email]  |  [Phone]
+
+Sincerely,
+
+[Authorized Signatory Name]
+[Title — must be C-level or equivalent]
+[Company Name]
+[Date]
+[Official Seal / Stamp if applicable]</code></pre>
+  </div>
+
+  <div class="callout tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body">
+      <div class="callout-title">Get-Out-of-Jail Card — সাথে রাখো</div>
+      <div class="callout-text">Engagement Letter-এর একটি printed copy সবসময় সাথে রাখো — বিশেষত onsite testing-এ। Blind testing-এ যদি IT team বা security personnel তোমাকে থামায় বা police call করে, এই letter দেখাও। Letter-এ CISO-র phone number থাকুক যাতে verify করা যায়।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+  <div class="callout info">
+    <div class="callout-icon">✅</div>
+    <div class="callout-body">
+      <div class="callout-title">Chapter 3 — Key Takeaways</div>
+      <div class="callout-text">
+        • Pre-engagement = engagement-এর ৩০-৪০% সময় — skip করা যাবে না<br>
+        • NDA → Questionnaire → Scoping Meeting → Proposal → Contract → ROE → Kick-off<br>
+        • Scope clearly define করো: In-scope AND Out-of-scope উভয়<br>
+        • ROE sign হওয়ার আগে একটি packet-ও পাঠাবে না<br>
+        • Engagement Letter সবসময় printed copy সাথে রাখো<br>
+        • Critical finding পেলে — test pause, client-কে immediately call করো<br>
+        • Daily email update — client relationship maintain করার সহজ উপায়<br>
+        • Timeline-এ testing + reporting উভয় সময় include করো
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter-nav">
+    <div class="chapter-nav-btn" onclick="showPage('ch2')">
+      <div class="chapter-nav-label">← Previous</div>
+      <div class="chapter-nav-title">Chapter 2: Laws &amp; Regulations</div>
+    </div>
+    <div class="chapter-nav-btn next" style="opacity:0.5;cursor:default">
+      <div class="chapter-nav-label">Coming Soon →</div>
+      <div class="chapter-nav-title">Chapter 4: Handling Legal Issues</div>
+    </div>
+  </div>
+</div>
+
+    </div><!-- /content-area -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+// ════════════════════════════════════════════
+// STATE — all persisted via localStorage
+// ════════════════════════════════════════════
+const LS = {
+  get: (k, def) => { try { const v = localStorage.getItem(k); return v !== null ? JSON.parse(v) : def; } catch { return def; } },
+  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+
+let currentPage = LS.get('pt_currentPage', 'front');
+let highlightMode = false;
+let notesOpen = false;
+let bookmarksOpen = false;
+let progressOpen = false;
+let fontSize = LS.get('pt_fontsize', 16);
+let notes = LS.get('pt_notes', []);
+let bookmarks = LS.get('pt_bookmarks', []);
+let completedSections = LS.get('pt_completed', []);
+let currentSelection = null;
+let focusActive = false;
+
+// All section IDs for progress tracking
+const ALL_SECTIONS = [
+  {id:'preface',label:'ভূমিকা',ch:'front'},{id:'lab-setup',label:'Lab Setup',ch:'front'},
+  {id:'s1-1',label:'1.1',ch:'ch1'},{id:'s1-2',label:'1.2',ch:'ch1'},{id:'s1-3',label:'1.3',ch:'ch1'},
+  {id:'s1-4',label:'1.4',ch:'ch1'},{id:'s1-5',label:'1.5',ch:'ch1'},{id:'s1-6',label:'1.6',ch:'ch1'},
+  {id:'s1-7',label:'1.7',ch:'ch1'},{id:'s1-8',label:'1.8',ch:'ch1'},{id:'s1-9',label:'1.9',ch:'ch1'},
+  {id:'s1-10',label:'1.10',ch:'ch1'},{id:'s1-11',label:'1.11',ch:'ch1'},{id:'s1-12',label:'1.12',ch:'ch1'},
+  {id:'s1-13',label:'1.13',ch:'ch1'},{id:'s1-14',label:'1.14',ch:'ch1'},{id:'s1-15',label:'1.15',ch:'ch1'},{id:'s1-16',label:'1.16',ch:'ch1'},
+  {id:'s2-1',label:'2.1',ch:'ch2'},{id:'s2-2',label:'2.2',ch:'ch2'},{id:'s2-3',label:'2.3',ch:'ch2'},
+  {id:'s2-4',label:'2.4',ch:'ch2'},{id:'s2-5',label:'2.5',ch:'ch2'},{id:'s2-6',label:'2.6',ch:'ch2'},
+  {id:'s3-1',label:'3.1',ch:'ch3'},{id:'s3-2',label:'3.2',ch:'ch3'},{id:'s3-3',label:'3.3',ch:'ch3'},
+  {id:'s3-4',label:'3.4',ch:'ch3'},{id:'s3-5',label:'3.5',ch:'ch3'},{id:'s3-6',label:'3.6',ch:'ch3'},
+  {id:'s3-7',label:'3.7',ch:'ch3'},{id:'s3-8',label:'3.8',ch:'ch3'},{id:'s3-9',label:'3.9',ch:'ch3'},
+  {id:'s3-10',label:'3.10',ch:'ch3'},{id:'s3-11',label:'3.11',ch:'ch3'},{id:'s3-12',label:'3.12',ch:'ch3'},
+  {id:'s3-13',label:'3.13',ch:'ch3'},{id:'s3-14',label:'3.14',ch:'ch3'},{id:'s3-15',label:'3.15',ch:'ch3'},
+  {id:'s3-16',label:'3.16',ch:'ch3'},{id:'s3-17',label:'3.17',ch:'ch3'},{id:'s3-18',label:'3.18',ch:'ch3'},
+  {id:'s3-19',label:'3.19',ch:'ch3'},{id:'s3-20',label:'3.20',ch:'ch3'},{id:'s3-21',label:'3.21',ch:'ch3'},
+  {id:'s3-22',label:'3.22',ch:'ch3'},{id:'s3-23',label:'3.23',ch:'ch3'},
+];
+
+// ════════════════════════════════════════════
+// PAGE NAV
+// ════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById('page-' + id);
+  if (!page) return;
+  page.classList.add('active');
+  currentPage = id;
+  LS.set('pt_currentPage', id);
+  updateNavActive(id);
+  window.scrollTo(0, 0);
+  updateProgress();
+  restoreHighlights();
+  restoreChecklists();
+  updateSectionCompletionUI();
+}
+
+function updateNavActive(id) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll(`.nav-item[onclick*="'${id}'"]`).forEach(n => n.classList.add('active'));
+}
+
+function scrollToSection(id) {
+  setTimeout(() => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 120);
+}
+// Override the global scrollTo (used in nav)
+window.scrollTo_orig = window.scrollTo.bind(window);
+function scrollTo(id) { scrollToSection(id); }
+
+// ════════════════════════════════════════════
+// READING PROGRESS BAR (page scroll)
+// ════════════════════════════════════════════
+function updateProgress() {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = docHeight > 0 ? Math.min(100, (scrollTop / docHeight) * 100) : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('scroll-top').classList.toggle('visible', scrollTop > 300);
+}
+window.addEventListener('scroll', updateProgress, { passive: true });
+
+// ════════════════════════════════════════════
+// SIDEBAR
+// ════════════════════════════════════════════
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const collapsed = sb.classList.toggle('collapsed');
+  main.classList.toggle('expanded', collapsed);
+  LS.set('pt_sidebar', collapsed ? '0' : '1');
+}
+(function() {
+  if (LS.get('pt_sidebar', '1') === '0') {
+    document.getElementById('sidebar').classList.add('collapsed');
+    document.getElementById('main').classList.add('expanded');
+  }
+})();
+
+// ════════════════════════════════════════════
+// THEME
+// ════════════════════════════════════════════
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = cur === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  LS.set('pt_theme', next);
+}
+(function() {
+  const t = LS.get('pt_theme', 'dark');
+  document.documentElement.setAttribute('data-theme', t);
+})();
+
+// ════════════════════════════════════════════
+// FONT SIZE — applied to body so everything scales
+// ════════════════════════════════════════════
+function applyFontSize(size) {
+  document.body.style.setProperty('--base-font', size + 'px');
+  // Apply to all text elements
+  document.querySelectorAll('p, li, td, th, .callout-text, .nav-item, h3.sub-title').forEach(el => {
+    el.style.fontSize = '';  // clear inline, let CSS cascade from body
+  });
+  document.getElementById('content-area').style.fontSize = size + 'px';
+  document.getElementById('font-size-display').textContent = size;
+}
+
+function changeFontSize(delta) {
+  fontSize = Math.min(24, Math.max(12, fontSize + delta));
+  LS.set('pt_fontsize', fontSize);
+  applyFontSize(fontSize);
+}
+(function() { applyFontSize(fontSize); })();
+
+// ════════════════════════════════════════════
+// FOCUS MODE — highlights hovered paragraph only
+// ════════════════════════════════════════════
+function toggleFocus() {
+  focusActive = !focusActive;
+  document.getElementById('btn-focus').classList.toggle('active', focusActive);
+  LS.set('pt_focus', focusActive);
+
+  if (focusActive) {
+    document.body.classList.add('focus-mode');
+    document.querySelectorAll('#content-area p, #content-area li, #content-area tr').forEach(el => {
+      el.addEventListener('mouseenter', focusEnter);
+      el.addEventListener('mouseleave', focusLeave);
+    });
+    // dim all non-hovered
+    document.querySelectorAll('#content-area p, #content-area li, #content-area tr').forEach(el => {
+      el.classList.add('focus-dim');
+    });
+  } else {
+    document.body.classList.remove('focus-mode');
+    document.querySelectorAll('.focus-dim, .focus-bright').forEach(el => {
+      el.classList.remove('focus-dim', 'focus-bright');
+      el.removeEventListener('mouseenter', focusEnter);
+      el.removeEventListener('mouseleave', focusLeave);
+    });
+  }
+}
+
+function focusEnter(e) {
+  e.currentTarget.classList.remove('focus-dim');
+  e.currentTarget.classList.add('focus-bright');
+}
+function focusLeave(e) {
+  e.currentTarget.classList.remove('focus-bright');
+  e.currentTarget.classList.add('focus-dim');
+}
+
+// ════════════════════════════════════════════
+// COPY CODE
+// ════════════════════════════════════════════
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  const text = pre.innerText;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showCopied(btn));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showCopied(btn);
+  }
+}
+function showCopied(btn) {
+  btn.textContent = '✓ Copied!'; btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+}
+
+// ════════════════════════════════════════════
+// HIGHLIGHT — saved to localStorage by page
+// ════════════════════════════════════════════
+let hlStore = LS.get('pt_highlights_v2', {});   // { pageid: [{xpath, text, color, id}] }
+
+function toggleHighlightMode() {
+  highlightMode = !highlightMode;
+  document.getElementById('btn-highlight').classList.toggle('active', highlightMode);
+  document.body.style.cursor = highlightMode ? 'text' : '';
+  const tooltip = document.getElementById('hl-tooltip');
+  if (!highlightMode) tooltip.style.display = 'none';
+}
+
+document.addEventListener('mouseup', function(e) {
+  const tooltip = document.getElementById('hl-tooltip');
+  if (tooltip.contains(e.target)) return;
+  if (!highlightMode) { tooltip.style.display = 'none'; return; }
+  const sel = window.getSelection();
+  if (sel && sel.toString().trim().length > 1 && !sel.isCollapsed) {
+    currentSelection = { sel: sel.toString().trim(), range: sel.getRangeAt(0).cloneRange() };
+    const rect = sel.getRangeAt(0).getBoundingClientRect();
+    tooltip.style.display = 'flex';
+    tooltip.style.top = (rect.bottom + window.scrollY + 10) + 'px';
+    tooltip.style.left = Math.max(4, Math.min(window.innerWidth - 220, rect.left + window.scrollX)) + 'px';
+  } else {
+    tooltip.style.display = 'none';
+  }
+});
+
+function applyHighlight(color) {
+  if (!currentSelection) return;
+  const { range, sel } = currentSelection;
+  try {
+    const span = document.createElement('span');
+    const hlId = 'hl_' + Date.now();
+    span.className = 'highlighted-' + color;
+    span.setAttribute('data-hl-id', hlId);
+    span.setAttribute('data-hl-color', color);
+    span.title = 'Click to remove highlight';
+    span.style.cursor = 'pointer';
+    span.addEventListener('click', function(e) {
+      if (!highlightMode) return;
+      removeHighlightById(hlId);
+    });
+    range.surroundContents(span);
+
+    // Save to storage
+    if (!hlStore[currentPage]) hlStore[currentPage] = [];
+    hlStore[currentPage].push({ id: hlId, text: sel, color, ts: Date.now() });
+    LS.set('pt_highlights_v2', hlStore);
+
+    window.getSelection().removeAllRanges();
+  } catch(err) {
+    // Complex range (crosses elements) — wrap what we can
+    console.warn('Highlight range error:', err);
+  }
+  document.getElementById('hl-tooltip').style.display = 'none';
+  currentSelection = null;
+}
+
+function eraseHighlight() {
+  document.getElementById('hl-tooltip').style.display = 'none';
+  // Find highlighted span containing current selection
+  const sel = window.getSelection();
+  if (sel && sel.anchorNode) {
+    let el = sel.anchorNode.parentElement;
+    while (el && !el.getAttribute?.('data-hl-id')) el = el.parentElement;
+    if (el && el.getAttribute('data-hl-id')) {
+      removeHighlightById(el.getAttribute('data-hl-id'));
+    }
+  }
+  currentSelection = null;
+}
+
+function removeHighlightById(hlId) {
+  const span = document.querySelector(`[data-hl-id="${hlId}"]`);
+  if (span) {
+    const parent = span.parentNode;
+    while (span.firstChild) parent.insertBefore(span.firstChild, span);
+    parent.removeChild(span);
+  }
+  if (hlStore[currentPage]) {
+    hlStore[currentPage] = hlStore[currentPage].filter(h => h.id !== hlId);
+    LS.set('pt_highlights_v2', hlStore);
+  }
+}
+
+function restoreHighlights() {
+  // We use text-search based restore for robustness
+  const saved = (hlStore[currentPage] || []);
+  if (!saved.length) return;
+  const page = document.getElementById('page-' + currentPage);
+  if (!page) return;
+
+  saved.forEach(({ id: hlId, text, color }) => {
+    // Skip if already restored
+    if (page.querySelector(`[data-hl-id="${hlId}"]`)) return;
+    // Find text node containing the saved text
+    const walker = document.createTreeWalker(page, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      const idx = node.textContent.indexOf(text);
+      if (idx !== -1 && !node.parentElement.getAttribute?.('data-hl-id')) {
+        try {
+          const range = document.createRange();
+          range.setStart(node, idx);
+          range.setEnd(node, idx + text.length);
+          const span = document.createElement('span');
+          span.className = 'highlighted-' + color;
+          span.setAttribute('data-hl-id', hlId);
+          span.setAttribute('data-hl-color', color);
+          span.title = 'Click to remove highlight';
+          span.style.cursor = 'pointer';
+          span.addEventListener('click', function() { if (highlightMode) removeHighlightById(hlId); });
+          range.surroundContents(span);
+        } catch (e) {}
+        break;
+      }
+    }
+  });
+}
+
+// ════════════════════════════════════════════
+// NOTES
+// ════════════════════════════════════════════
+function toggleNotes() {
+  notesOpen = !notesOpen;
+  document.getElementById('notes-panel').classList.toggle('open', notesOpen);
+  document.getElementById('btn-notes').classList.toggle('active', notesOpen);
+  if (bookmarksOpen) closeBookmarks();
+  if (progressOpen) closeProgressPanel();
+  renderNotes();
+}
+
+function renderNotes() {
+  const list = document.getElementById('notes-list');
+  if (!notes.length) { list.innerHTML = '<div class="no-notes">এখনো কোনো নোট নেই।<br>নিচে নোট লিখুন।</div>'; return; }
+  list.innerHTML = notes.map((n, i) => `
+    <div class="note-item">
+      <div class="note-item-ref">📄 ${n.page || 'General'} · ${new Date(n.time).toLocaleDateString('bn-BD')}</div>
+      <div class="note-item-text">${n.text.replace(/\n/g,'<br>')}</div>
+      <span class="note-item-del" onclick="deleteNote(${i})">✕ Delete</span>
+    </div>`).join('');
+}
+
+function saveManualNote() {
+  const txt = document.getElementById('note-input').value.trim();
+  if (!txt) return;
+  notes.push({ text: txt, page: currentPage, time: Date.now() });
+  LS.set('pt_notes', notes);
+  document.getElementById('note-input').value = '';
+  renderNotes();
+}
+
+function deleteNote(i) {
+  notes.splice(i, 1);
+  LS.set('pt_notes', notes);
+  renderNotes();
+}
+
+// ════════════════════════════════════════════
+// BOOKMARKS
+// ════════════════════════════════════════════
+function addBookmark(id, title) {
+  const exists = bookmarks.findIndex(b => b.id === id);
+  if (exists >= 0) {
+    bookmarks.splice(exists, 1);
+  } else {
+    bookmarks.push({ id, title, page: currentPage, time: Date.now() });
+  }
+  LS.set('pt_bookmarks', bookmarks);
+  updateAllBookmarkBtns();
+  renderBookmarks();
+}
+
+function updateAllBookmarkBtns() {
+  document.querySelectorAll('.bookmark-btn').forEach(btn => {
+    const m = (btn.getAttribute('onclick') || '').match(/'([^']+)'/);
+    if (m) btn.classList.toggle('bookmarked', bookmarks.some(b => b.id === m[1]));
+  });
+}
+
+function renderBookmarks() {
+  const list = document.getElementById('bookmarks-list');
+  if (!bookmarks.length) { list.innerHTML = '<div class="no-notes">কোনো bookmark নেই।<br>Section-এর 🔖 click করুন।</div>'; return; }
+  list.innerHTML = bookmarks.map(b => `
+    <div class="bm-item" onclick="showPage('${b.page}'); scrollToSection('${b.id}'); closeBookmarks();">
+      <div class="bm-item-title">🔖 ${b.title}</div>
+      <div class="bm-item-loc">${b.page.replace('ch','Chapter ').replace('front','Front Matter')}</div>
+    </div>`).join('');
+}
+
+function toggleBookmarks() {
+  bookmarksOpen = !bookmarksOpen;
+  document.getElementById('bookmarks-panel').classList.toggle('open', bookmarksOpen);
+  document.getElementById('btn-bookmarks').classList.toggle('active', bookmarksOpen);
+  if (notesOpen) toggleNotes();
+  if (progressOpen) closeProgressPanel();
+  renderBookmarks();
+}
+function closeBookmarks() {
+  bookmarksOpen = false;
+  document.getElementById('bookmarks-panel').classList.remove('open');
+  document.getElementById('btn-bookmarks').classList.remove('active');
+}
+
+// ════════════════════════════════════════════
+// READING PROGRESS TRACKER
+// ════════════════════════════════════════════
+function toggleSection(sectionId) {
+  const idx = completedSections.indexOf(sectionId);
+  if (idx >= 0) completedSections.splice(idx, 1);
+  else completedSections.push(sectionId);
+  LS.set('pt_completed', completedSections);
+  updateSectionCompletionUI();
+  renderProgressPanel();
+  updateProgressBadge();
+}
+
+function updateSectionCompletionUI() {
+  document.querySelectorAll('.section-complete-btn').forEach(btn => {
+    const sid = btn.getAttribute('data-sid');
+    const done = completedSections.includes(sid);
+    btn.classList.toggle('done', done);
+    btn.textContent = done ? '✅ Done' : '○ Mark Done';
+    btn.title = done ? 'Click to unmark' : 'Mark as read';
+  });
+}
+
+function updateProgressBadge() {
+  const total = ALL_SECTIONS.length;
+  const done = completedSections.length;
+  const pct = Math.round((done / total) * 100);
+  const badge = document.getElementById('progress-badge');
+  if (badge) { badge.textContent = pct + '%'; badge.style.background = pct === 100 ? 'var(--green)' : 'var(--accent2)'; }
+}
+
+function openProgressPanel() {
+  progressOpen = true;
+  let panel = document.getElementById('progress-panel');
+  if (!panel) buildProgressPanel();
+  document.getElementById('progress-panel').classList.add('open');
+  document.getElementById('btn-progress').classList.add('active');
+  if (notesOpen) toggleNotes();
+  if (bookmarksOpen) closeBookmarks();
+  renderProgressPanel();
+}
+
+function closeProgressPanel() {
+  progressOpen = false;
+  const p = document.getElementById('progress-panel');
+  if (p) p.classList.remove('open');
+  const b = document.getElementById('btn-progress');
+  if (b) b.classList.remove('active');
+}
+
+function toggleProgressPanel() {
+  progressOpen ? closeProgressPanel() : openProgressPanel();
+}
+
+function buildProgressPanel() {
+  const panel = document.createElement('div');
+  panel.id = 'progress-panel';
+  panel.innerHTML = `
+    <div id="notes-header" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)">
+      <h3 style="font-size:13px;font-weight:700;color:var(--text);font-family:var(--font-en)">📊 Reading Progress</h3>
+      <button class="tool-btn" onclick="closeProgressPanel()">✕</button>
+    </div>
+    <div id="progress-panel-body" style="flex:1;overflow-y:auto;padding:12px;"></div>
+  `;
+  panel.style.cssText = `position:fixed;right:0;top:calc(var(--topbar-h) + 3px);bottom:0;width:300px;background:var(--bg2);border-left:1px solid var(--border);z-index:60;transform:translateX(100%);transition:transform 0.25s;display:flex;flex-direction:column;`;
+  document.body.appendChild(panel);
+  // Add open style
+  const style = document.createElement('style');
+  style.textContent = '#progress-panel.open{transform:translateX(0)!important}';
+  document.head.appendChild(style);
+}
+
+function renderProgressPanel() {
+  const body = document.getElementById('progress-panel-body');
+  if (!body) return;
+  const total = ALL_SECTIONS.length;
+  const done = completedSections.length;
+  const pct = Math.round((done / total) * 100);
+
+  // Group by chapter
+  const chapters = {};
+  ALL_SECTIONS.forEach(s => {
+    if (!chapters[s.ch]) chapters[s.ch] = [];
+    chapters[s.ch].push(s);
+  });
+
+  const chLabels = { front:'Front Matter', ch1:'Chapter 1', ch2:'Chapter 2', ch3:'Chapter 3' };
+
+  body.innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;color:var(--text2);font-family:var(--font-en)">Overall Progress</span>
+        <span style="font-size:13px;font-weight:700;color:var(--accent);font-family:var(--font-en)">${done}/${total} · ${pct}%</span>
+      </div>
+      <div style="background:var(--bg4);border-radius:8px;height:10px;overflow:hidden">
+        <div style="height:100%;background:linear-gradient(90deg,var(--accent2),var(--green));width:${pct}%;transition:width 0.4s;border-radius:8px"></div>
+      </div>
+    </div>
+    ${Object.entries(chapters).map(([ch, secs]) => {
+      const chDone = secs.filter(s => completedSections.includes(s.id)).length;
+      const chPct = Math.round((chDone/secs.length)*100);
+      return `
+      <div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;cursor:pointer" onclick="showPage('${ch}')">
+          <span style="font-size:12px;font-weight:700;color:var(--text);font-family:var(--font-en)">${chLabels[ch]||ch}</span>
+          <span style="font-size:11px;color:${chPct===100?'var(--green)':'var(--text3)'};font-family:var(--font-en)">${chDone}/${secs.length}</span>
+        </div>
+        <div style="background:var(--bg4);border-radius:4px;height:4px;margin-bottom:8px;overflow:hidden">
+          <div style="height:100%;background:${chPct===100?'var(--green)':'var(--accent2)'};width:${chPct}%;transition:width 0.3s"></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${secs.map(s => `
+            <span onclick="showPage('${s.ch}');scrollToSection('${s.id}')" style="font-size:10px;padding:3px 7px;border-radius:4px;cursor:pointer;font-family:var(--font-en);border:1px solid ${completedSections.includes(s.id)?'var(--green)':'var(--border)'};background:${completedSections.includes(s.id)?'var(--green-bg)':'var(--bg3)'};color:${completedSections.includes(s.id)?'var(--green)':'var(--text3)'};transition:all 0.15s" title="${s.label}">
+              ${completedSections.includes(s.id)?'✓ ':''}${s.label}
+            </span>`).join('')}
+        </div>
+      </div>`; }).join('')}
+    <button onclick="if(confirm('সব progress reset করবেন?')){completedSections=[];LS.set('pt_completed',[]);updateSectionCompletionUI();renderProgressPanel();updateProgressBadge();}" style="width:100%;padding:8px;background:var(--red-bg);color:var(--red);border:1px solid var(--red);border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--font-en);margin-top:8px">🗑 Reset Progress</button>
+  `;
+}
+
+// ════════════════════════════════════════════
+// CHECKLIST — persisted per page
+// ════════════════════════════════════════════
+let checklistState = LS.get('pt_checklists', {});
+
+function toggleCheck(el) {
+  el.classList.toggle('checked');
+  const li = el.closest('li');
+  if (li) li.classList.toggle('checked-item', el.classList.contains('checked'));
+  // Save state
+  const allChecks = document.querySelectorAll('.cl-check');
+  const state = {};
+  allChecks.forEach((c, i) => { state[i] = c.classList.contains('checked'); });
+  if (!checklistState[currentPage]) checklistState[currentPage] = {};
+  checklistState[currentPage] = state;
+  LS.set('pt_checklists', checklistState);
+}
+
+function restoreChecklists() {
+  const state = checklistState[currentPage] || {};
+  const allChecks = document.querySelectorAll('.cl-check');
+  allChecks.forEach((c, i) => {
+    if (state[i]) {
+      c.classList.add('checked');
+      const li = c.closest('li');
+      if (li) li.classList.add('checked-item');
+    }
+  });
+}
+
+// ── SEARCH ──
+const searchIndex = [
+  { page: 'front', title: 'ভূমিকা — Preface', id: 'preface', content: 'penetration testing mindset ethical hacker authorized' },
+  { page: 'front', title: 'Lab Environment Setup', id: 'lab-setup', content: 'kali linux vmware virtualbox metasploitable dvwa setup lab' },
+  { page: 'ch1', title: '1.1 What is Penetration Testing', id: 's1-1', content: 'penetration testing pentest authorized simulated attack hacking ethical' },
+  { page: 'ch1', title: '1.2 Benefits of Pentesting', id: 's1-2', content: 'benefits ROI compliance PCI DSS ISO 27001 SOC' },
+  { page: 'ch1', title: '1.3 Service Delivery Model', id: 's1-3', content: 'onsite remote hybrid delivery model pros cons' },
+  { page: 'ch1', title: '1.4 ROI Calculation', id: 's1-4', content: 'ROI return on investment cost benefit analysis breach loss' },
+  { page: 'ch1', title: '1.5 Assessment Types', id: 's1-5', content: 'black box white box grey box assessment type comparison' },
+  { page: 'ch1', title: '1.6 Strategies', id: 's1-6', content: 'external internal targeted blind double blind strategy' },
+  { page: 'ch1', title: '1.7 Cost & Comprehensiveness', id: 's1-7', content: 'cost pricing BDT scope web app network AD red team' },
+  { page: 'ch1', title: '1.8 Automated vs Manual', id: 's1-8', content: 'automated manual nessus openvas false positive context' },
+  { page: 'ch1', title: '1.9 Common Areas', id: 's1-9', content: 'network web app mobile social engineering cloud physical red team' },
+  { page: 'ch1', title: '1.10 Pentest Process', id: 's1-10', content: 'process pre-engagement recon scanning exploitation post report cleanup' },
+  { page: 'ch1', title: '1.11 Phases', id: 's1-11', content: 'phases reconnaissance scanning exploitation post-exploitation reporting cleanup' },
+  { page: 'ch1', title: '1.12 Methodologies', id: 's1-12', content: 'PTES OWASP NIST MITRE ATT&CK OSSTMM methodology' },
+  { page: 'ch1', title: '1.13 When to Test', id: 's1-13', content: 'annual after breach major changes regulatory product launch' },
+  { page: 'ch1', title: '1.14 Ethics', id: 's1-14', content: 'ethics authorization confidentiality harm truthful reporting' },
+  { page: 'ch1', title: '1.15 Qualifications', id: 's1-15', content: 'OSCP CEH CPTS PNPT certification roadmap skills networking python' },
+  { page: 'ch1', title: '1.16 Risks', id: 's1-16', content: 'risk system crash data loss false security scope creep legal' },
+  { page: 'ch2', title: '2.1 Bangladesh Laws', id: 's2-1', content: 'Bangladesh DSA digital security act ICT act Bangladesh Bank cybersecurity framework' },
+  { page: 'ch2', title: '2.2 US Laws', id: 's2-2', content: 'United States CFAA HIPAA GLBA PCI DSS CCPA state laws' },
+  { page: 'ch2', title: '2.3 GDPR', id: 's2-3', content: 'GDPR EU general data protection regulation consent fine principles' },
+  { page: 'ch2', title: '2.4 UK Laws', id: 's2-4', content: 'UK GDPR DPA 2018 computer misuse act CREST ICO' },
+  { page: 'ch2', title: '2.5 India DPDP Act', id: 's2-5', content: 'India DPDP digital personal data protection IT act 2000 section 66' },
+  { page: 'ch2', title: '2.6 China PIPL CSL', id: 's2-6', content: 'China PIPL CSL DSL cybersecurity personal information cross-border' },
+  { page: 'ch3', title: '3.1 Pre-engagement Activities', id: 's3-1', content: 'pre-engagement NDA checklist kick-off planning activities before testing' },
+  { page: 'ch3', title: '3.2 Proposal & RFP', id: 's3-2', content: 'RFP request for proposal submission template fixed price time materials' },
+  { page: 'ch3', title: '3.3 Scoping Meeting', id: 's3-3', content: 'scoping meeting agenda template questions infrastructure logistics' },
+  { page: 'ch3', title: '3.4 Questionnaires', id: 's3-4', content: 'questionnaire client pre-engagement questions network web app AD wireless' },
+  { page: 'ch3', title: '3.5 Assessment Types', id: 's3-5', content: 'assessment type black white grey box identify confirm recommend' },
+  { page: 'ch3', title: '3.6 Testing Strategy', id: 's3-6', content: 'testing strategy targeted blind double-blind lights on off' },
+  { page: 'ch3', title: '3.7 Infrastructure Areas', id: 's3-7', content: 'infrastructure areas scope definition IP ranges domains applications in-scope' },
+  { page: 'ch3', title: '3.8 Out-of-Scope', id: 's3-8', content: 'out of scope tests not to perform DoS destructive social engineering exclusions' },
+  { page: 'ch3', title: '3.9 Deliverables', id: 's3-9', content: 'deliverables executive report technical report vulnerability matrix retest attestation' },
+  { page: 'ch3', title: '3.10 Reports', id: 's3-10', content: 'reports executive technical draft final retest attestation letter format' },
+  { page: 'ch3', title: '3.11 Test Duration', id: 's3-11', content: 'test duration timeline days weeks web app network red team reporting time' },
+  { page: 'ch3', title: '3.12 Team Staffing', id: 's3-12', content: 'team staffing lead pentester junior project manager specialist role' },
+  { page: 'ch3', title: '3.13 Cost Estimation', id: 's3-13', content: 'cost estimation worksheet man-days daily rate pricing margin payment terms BDT' },
+  { page: 'ch3', title: '3.14 Proposal Submission', id: 's3-14', content: 'proposal submission checklist review pricing timeline qualifications legal' },
+  { page: 'ch3', title: '3.15 TMTT Brainstorming', id: 's3-15', content: 'TMTT test manager team brainstorming attack surface tool selection role division threat model' },
+  { page: 'ch3', title: '3.16 Communication Lines', id: 's3-16', content: 'communication plan POC emergency contact daily update encrypted critical finding notify' },
+  { page: 'ch3', title: '3.17 Kick-off Call TPC', id: 's3-17', content: 'TPC teleconference kick-off call agenda scope confirmation whitelisting credentials' },
+  { page: 'ch3', title: '3.18 Project Timeline', id: 's3-18', content: 'project timeline gantt chart testing reporting retest phases days schedule' },
+  { page: 'ch3', title: '3.19 Meeting Frequency', id: 's3-19', content: 'meeting frequency daily weekly check-in critical finding debrief retest' },
+  { page: 'ch3', title: '3.20 Time of Day', id: 's3-20', content: 'time of day business hours after hours night weekend Bangladesh Friday Ramadan' },
+  { page: 'ch3', title: '3.21 Support Personnel', id: 's3-21', content: 'support personnel network admin system admin developer DBA CISO legal assistance' },
+  { page: 'ch3', title: '3.22 Rules of Engagement ROE', id: 's3-22', content: 'ROE rules of engagement document template authorized systems prohibited methods emergency stop signatures' },
+  { page: 'ch3', title: '3.23 Engagement Letter', id: 's3-23', content: 'engagement letter client letterhead authorization get out of jail card printed copy' },
+];
+
+function openSearch() {
+  document.getElementById('search-box').classList.add('open');
+  document.getElementById('search-overlay').classList.add('open');
+  document.getElementById('search-input').focus();
+}
+function closeSearch() {
+  document.getElementById('search-box').classList.remove('open');
+  document.getElementById('search-overlay').classList.remove('open');
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-results').innerHTML = '<div id="search-empty">কিছু টাইপ করুন...</div>';
+}
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
+  if (e.key === 'Escape') closeSearch();
+});
+
+function doSearch(q) {
+  const res = document.getElementById('search-results');
+  if (!q || q.length < 2) { res.innerHTML = '<div id="search-empty">কিছু টাইপ করুন...</div>'; return; }
+  const lower = q.toLowerCase();
+  const matches = searchIndex.filter(item =>
+    item.title.toLowerCase().includes(lower) || item.content.toLowerCase().includes(lower)
+  );
+  if (matches.length === 0) { res.innerHTML = '<div id="search-empty">কোনো result পাওয়া যায়নি।</div>'; return; }
+  res.innerHTML = matches.slice(0, 10).map(m => {
+    const snippet = m.content.toLowerCase().includes(lower)
+      ? '...' + m.content.replace(new RegExp(q, 'gi'), `<mark>${q}</mark>`).substring(0, 120) + '...'
+      : '';
+    return `<div class="search-result-item" onclick="showPage('${m.page}'); scrollTo('${m.id}'); closeSearch();">
+      <div class="search-result-title">${m.title.replace(new RegExp(q, 'gi'), `<mark>${q}</mark>`)}</div>
+      <div class="search-result-snippet">${snippet}</div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════
+// INIT — restore all state on load
+// ════════════════════════════════════════════
+(function init() {
+  // Show last visited page
+  showPage(currentPage);
+
+  // Restore all tool states
+  renderNotes();
+  renderBookmarks();
+  updateProgress();
+  updateProgressBadge();
+  updateAllBookmarkBtns();
+  updateSectionCompletionUI();
+
+  // Restore focus mode if was active
+  if (LS.get('pt_focus', false)) toggleFocus();
+})();
+</script>
+</body>
+</html>

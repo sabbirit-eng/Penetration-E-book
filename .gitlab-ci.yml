@@ -1,0 +1,49 @@
+# ══════════════════════════════════════════════════════
+# GitLab CI/CD — Pentest eBook Deploy to GitLab Pages
+# ══════════════════════════════════════════════════════
+# এই file-টি root-এ রাখো (project root/.gitlab-ci.yml)
+# GitLab Pages automatically serve করবে public/ folder থেকে
+
+image: alpine:latest
+
+stages:
+  - deploy
+
+pages:
+  stage: deploy
+  script:
+    # public/ folder-এ সব files copy করো (GitLab Pages এটাই serve করে)
+    - mkdir -p public
+    - cp index.html public/index.html
+    # যদি আরো assets থাকে (css/, js/, images/) সেগুলোও copy করো
+    # - cp -r assets/ public/assets/
+    - echo "✅ eBook deployed to GitLab Pages"
+    - echo "URL: https://<your-namespace>.gitlab.io/<your-project-name>/"
+
+  artifacts:
+    paths:
+      - public    # GitLab এই folder-টি serve করবে
+    expire_in: never  # artifact expire করবে না
+
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"   # main branch-এ push হলেই deploy
+      when: always
+    - when: never
+
+# ══════════════════════════════════════════════════════
+# OPTIONAL: GitLab-এ data store করার জন্য
+# তুমি GitLab Snippets বা GitLab API ব্যবহার করতে পারো।
+# নিচে একটি separate job দেওয়া হয়েছে যা
+# ebook-এর version info track করে।
+# ══════════════════════════════════════════════════════
+track-version:
+  stage: deploy
+  script:
+    - echo "Version tracking..."
+    - echo "{\"version\":\"$(date +%Y%m%d%H%M%S)\",\"commit\":\"$CI_COMMIT_SHA\",\"branch\":\"$CI_COMMIT_BRANCH\"}" > public/version.json
+    - cat public/version.json
+  artifacts:
+    paths:
+      - public/version.json
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
