@@ -440,8 +440,17 @@ html { scroll-behavior: smooth; }
 
 /* fade-in for sections */
 .page { display: none; }
-.page.active { display: block; animation: fadeIn 0.2s ease; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.page.active { display: block; animation: fadeIn 0.18s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+
+/* ── FONT SCALE FIX ── */
+#content-area { font-size: var(--fs, 16px) !important; }
+#content-area p { font-size: inherit !important; }
+#content-area li, #content-area .callout-text { font-size: inherit !important; }
+#content-area td, #content-area th { font-size: calc(var(--fs, 16px) - 2px) !important; }
+#content-area h2.section-title { font-size: calc(var(--fs, 16px) + 6px) !important; }
+#content-area h3.sub-title { font-size: calc(var(--fs, 16px) + 1px) !important; }
+code { font-size: calc(var(--fs, 16px) - 3px) !important; }
 </style>
 </head>
 <body>
@@ -2332,34 +2341,45 @@ Sincerely,
 </div><!-- /layout -->
 
 <script>
-// ════════════════════════════════════════════
-// STATE — all persisted via localStorage
-// ════════════════════════════════════════════
+/* ============================================================
+   PENTEST EBOOK — CORE ENGINE v3.0
+   All features work on GitHub Pages (pure localStorage)
+   ============================================================ */
+
+// ── SAFE STORAGE WRAPPER ──────────────────────────────────────
 const LS = {
-  get: (k, def) => { try { const v = localStorage.getItem(k); return v !== null ? JSON.parse(v) : def; } catch { return def; } },
-  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  get(k, def) {
+    try { const v = localStorage.getItem(k); return v !== null ? JSON.parse(v) : def; } catch { return def; }
+  },
+  set(k, v) {
+    try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; }
+  }
 };
 
-let currentPage = LS.get('pt_currentPage', 'front');
-let highlightMode = false;
-let notesOpen = false;
-let bookmarksOpen = false;
-let progressOpen = false;
-let fontSize = LS.get('pt_fontsize', 16);
-let notes = LS.get('pt_notes', []);
-let bookmarks = LS.get('pt_bookmarks', []);
-let completedSections = LS.get('pt_completed', []);
-let currentSelection = null;
-let focusActive = false;
+// ── STATE (loaded from localStorage on startup) ───────────────
+let currentPage    = LS.get('pt_page', 'front');
+let fontSize       = LS.get('pt_fontsize', 16);
+let notes          = LS.get('pt_notes', []);
+let bookmarks      = LS.get('pt_bookmarks', []);
+let completedSecs  = LS.get('pt_completed', []);
+let hlStore        = LS.get('pt_hl', {});        // { pageId: [{id,text,color}] }
+let clState        = LS.get('pt_cl', {});         // { pageId: {idx: bool} }
+let highlightMode  = false;
+let notesOpen      = false;
+let bookmarksOpen  = false;
+let progressOpen   = false;
+let focusActive    = false;
+let currentSel     = null;
 
-// All section IDs for progress tracking
-const ALL_SECTIONS = [
-  {id:'preface',label:'ভূমিকা',ch:'front'},{id:'lab-setup',label:'Lab Setup',ch:'front'},
+// ── ALL SECTIONS (for progress tracker) ──────────────────────
+const SECTIONS = [
+  {id:'preface',label:'Preface',ch:'front'},{id:'lab-setup',label:'Lab',ch:'front'},
   {id:'s1-1',label:'1.1',ch:'ch1'},{id:'s1-2',label:'1.2',ch:'ch1'},{id:'s1-3',label:'1.3',ch:'ch1'},
   {id:'s1-4',label:'1.4',ch:'ch1'},{id:'s1-5',label:'1.5',ch:'ch1'},{id:'s1-6',label:'1.6',ch:'ch1'},
   {id:'s1-7',label:'1.7',ch:'ch1'},{id:'s1-8',label:'1.8',ch:'ch1'},{id:'s1-9',label:'1.9',ch:'ch1'},
   {id:'s1-10',label:'1.10',ch:'ch1'},{id:'s1-11',label:'1.11',ch:'ch1'},{id:'s1-12',label:'1.12',ch:'ch1'},
-  {id:'s1-13',label:'1.13',ch:'ch1'},{id:'s1-14',label:'1.14',ch:'ch1'},{id:'s1-15',label:'1.15',ch:'ch1'},{id:'s1-16',label:'1.16',ch:'ch1'},
+  {id:'s1-13',label:'1.13',ch:'ch1'},{id:'s1-14',label:'1.14',ch:'ch1'},
+  {id:'s1-15',label:'1.15',ch:'ch1'},{id:'s1-16',label:'1.16',ch:'ch1'},
   {id:'s2-1',label:'2.1',ch:'ch2'},{id:'s2-2',label:'2.2',ch:'ch2'},{id:'s2-3',label:'2.3',ch:'ch2'},
   {id:'s2-4',label:'2.4',ch:'ch2'},{id:'s2-5',label:'2.5',ch:'ch2'},{id:'s2-6',label:'2.6',ch:'ch2'},
   {id:'s3-1',label:'3.1',ch:'ch3'},{id:'s3-2',label:'3.2',ch:'ch3'},{id:'s3-3',label:'3.3',ch:'ch3'},
@@ -2372,310 +2392,270 @@ const ALL_SECTIONS = [
   {id:'s3-22',label:'3.22',ch:'ch3'},{id:'s3-23',label:'3.23',ch:'ch3'},
 ];
 
-// ════════════════════════════════════════════
-// PAGE NAV
-// ════════════════════════════════════════════
-function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const page = document.getElementById('page-' + id);
-  if (!page) return;
-  page.classList.add('active');
-  currentPage = id;
-  LS.set('pt_currentPage', id);
-  updateNavActive(id);
-  window.scrollTo(0, 0);
-  updateProgress();
-  restoreHighlights();
-  restoreChecklists();
-  updateSectionCompletionUI();
+// ════════════════════════════════════════
+// FONT SIZE — uses CSS variable --fs
+// ════════════════════════════════════════
+function applyFontSize(sz) {
+  document.documentElement.style.setProperty('--fs', sz + 'px');
+  const display = document.getElementById('font-size-display');
+  if (display) display.textContent = sz;
+}
+function changeFontSize(delta) {
+  fontSize = Math.min(26, Math.max(12, fontSize + delta));
+  LS.set('pt_fontsize', fontSize);
+  applyFontSize(fontSize);
 }
 
-function updateNavActive(id) {
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll(`.nav-item[onclick*="'${id}'"]`).forEach(n => n.classList.add('active'));
-}
-
-function scrollToSection(id) {
-  setTimeout(() => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 120);
-}
-// Override the global scrollTo (used in nav)
-window.scrollTo_orig = window.scrollTo.bind(window);
-function scrollTo(id) { scrollToSection(id); }
-
-// ════════════════════════════════════════════
-// READING PROGRESS BAR (page scroll)
-// ════════════════════════════════════════════
-function updateProgress() {
-  const scrollTop = window.scrollY;
-  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-  const pct = docHeight > 0 ? Math.min(100, (scrollTop / docHeight) * 100) : 0;
-  document.getElementById('progress-fill').style.width = pct + '%';
-  document.getElementById('scroll-top').classList.toggle('visible', scrollTop > 300);
-}
-window.addEventListener('scroll', updateProgress, { passive: true });
-
-// ════════════════════════════════════════════
-// SIDEBAR
-// ════════════════════════════════════════════
-function toggleSidebar() {
-  const sb = document.getElementById('sidebar');
-  const main = document.getElementById('main');
-  const collapsed = sb.classList.toggle('collapsed');
-  main.classList.toggle('expanded', collapsed);
-  LS.set('pt_sidebar', collapsed ? '0' : '1');
-}
-(function() {
-  if (LS.get('pt_sidebar', '1') === '0') {
-    document.getElementById('sidebar').classList.add('collapsed');
-    document.getElementById('main').classList.add('expanded');
-  }
-})();
-
-// ════════════════════════════════════════════
+// ════════════════════════════════════════
 // THEME
-// ════════════════════════════════════════════
+// ════════════════════════════════════════
 function toggleTheme() {
   const cur = document.documentElement.getAttribute('data-theme') || 'dark';
   const next = cur === 'light' ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', next);
   LS.set('pt_theme', next);
 }
-(function() {
-  const t = LS.get('pt_theme', 'dark');
-  document.documentElement.setAttribute('data-theme', t);
-})();
 
-// ════════════════════════════════════════════
-// FONT SIZE — applied to body so everything scales
-// ════════════════════════════════════════════
-function applyFontSize(size) {
-  document.body.style.setProperty('--base-font', size + 'px');
-  // Apply to all text elements
-  document.querySelectorAll('p, li, td, th, .callout-text, .nav-item, h3.sub-title').forEach(el => {
-    el.style.fontSize = '';  // clear inline, let CSS cascade from body
+// ════════════════════════════════════════
+// PAGE NAVIGATION
+// ════════════════════════════════════════
+function showPage(id) {
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    p.style.display = 'none';
   });
-  document.getElementById('content-area').style.fontSize = size + 'px';
-  document.getElementById('font-size-display').textContent = size;
+  // Show target page
+  const target = document.getElementById('page-' + id);
+  if (!target) return;
+  target.style.display = 'block';
+  target.classList.add('active');
+
+  currentPage = id;
+  LS.set('pt_page', id);
+
+  // Scroll to top
+  window.scrollTo_orig ? window.scrollTo_orig(0, 0) : window.scrollTo(0, 0);
+
+  // Update UI
+  updateNavHighlight(id);
+  updateScrollBar();
+  restoreHighlightsOnPage(id);
+  restoreChecklistsOnPage(id);
+  updateMarkDoneButtons();
+  updateProgressBadge();
 }
 
-function changeFontSize(delta) {
-  fontSize = Math.min(24, Math.max(12, fontSize + delta));
-  LS.set('pt_fontsize', fontSize);
-  applyFontSize(fontSize);
+// Override scrollTo so nav calls work
+const _origScrollTo = window.scrollTo.bind(window);
+window.scrollTo_orig = _origScrollTo;
+function scrollTo(id) {   // called by nav onclick="scrollTo('s1-1')"
+  jumpTo(id);
 }
-(function() { applyFontSize(fontSize); })();
+function jumpTo(id) {
+  setTimeout(() => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 80);
+}
+// also expose scrollToSection for bookmark panel
+function scrollToSection(id) { jumpTo(id); }
 
-// ════════════════════════════════════════════
-// FOCUS MODE — highlights hovered paragraph only
-// ════════════════════════════════════════════
-function toggleFocus() {
-  focusActive = !focusActive;
-  document.getElementById('btn-focus').classList.toggle('active', focusActive);
-  LS.set('pt_focus', focusActive);
-
-  if (focusActive) {
-    document.body.classList.add('focus-mode');
-    document.querySelectorAll('#content-area p, #content-area li, #content-area tr').forEach(el => {
-      el.addEventListener('mouseenter', focusEnter);
-      el.addEventListener('mouseleave', focusLeave);
-    });
-    // dim all non-hovered
-    document.querySelectorAll('#content-area p, #content-area li, #content-area tr').forEach(el => {
-      el.classList.add('focus-dim');
-    });
-  } else {
-    document.body.classList.remove('focus-mode');
-    document.querySelectorAll('.focus-dim, .focus-bright').forEach(el => {
-      el.classList.remove('focus-dim', 'focus-bright');
-      el.removeEventListener('mouseenter', focusEnter);
-      el.removeEventListener('mouseleave', focusLeave);
-    });
-  }
+function updateNavHighlight(pageId) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll(`.nav-item[onclick*="'${pageId}'"]`).forEach(n => n.classList.add('active'));
 }
 
-function focusEnter(e) {
-  e.currentTarget.classList.remove('focus-dim');
-  e.currentTarget.classList.add('focus-bright');
+// ════════════════════════════════════════
+// SCROLL PROGRESS BAR
+// ════════════════════════════════════════
+function updateScrollBar() {
+  const scrollTop = window.scrollY;
+  const docH = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = docH > 0 ? Math.min(100, (scrollTop / docH) * 100) : 0;
+  const fill = document.getElementById('progress-fill');
+  if (fill) fill.style.width = pct + '%';
+  const btn = document.getElementById('scroll-top');
+  if (btn) btn.classList.toggle('visible', scrollTop > 400);
 }
-function focusLeave(e) {
-  e.currentTarget.classList.remove('focus-bright');
-  e.currentTarget.classList.add('focus-dim');
+window.addEventListener('scroll', updateScrollBar, { passive: true });
+
+// ════════════════════════════════════════
+// SIDEBAR
+// ════════════════════════════════════════
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  if (!sb) return;
+  const collapsed = sb.classList.toggle('collapsed');
+  if (main) main.classList.toggle('expanded', collapsed);
+  LS.set('pt_sidebar', collapsed);
 }
 
-// ════════════════════════════════════════════
-// COPY CODE
-// ════════════════════════════════════════════
-function copyCode(btn) {
-  const pre = btn.closest('.code-block').querySelector('pre');
-  const text = pre.innerText;
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => showCopied(btn));
-  } else {
-    const ta = document.createElement('textarea');
-    ta.value = text; document.body.appendChild(ta); ta.select();
-    document.execCommand('copy'); document.body.removeChild(ta);
-    showCopied(btn);
-  }
-}
-function showCopied(btn) {
-  btn.textContent = '✓ Copied!'; btn.classList.add('copied');
-  setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
-}
-
-// ════════════════════════════════════════════
-// HIGHLIGHT — saved to localStorage by page
-// ════════════════════════════════════════════
-let hlStore = LS.get('pt_highlights_v2', {});   // { pageid: [{xpath, text, color, id}] }
-
+// ════════════════════════════════════════
+// HIGHLIGHT — save & restore via localStorage
+// ════════════════════════════════════════
 function toggleHighlightMode() {
   highlightMode = !highlightMode;
-  document.getElementById('btn-highlight').classList.toggle('active', highlightMode);
+  const btn = document.getElementById('btn-highlight');
+  if (btn) btn.classList.toggle('active', highlightMode);
   document.body.style.cursor = highlightMode ? 'text' : '';
-  const tooltip = document.getElementById('hl-tooltip');
-  if (!highlightMode) tooltip.style.display = 'none';
+  if (!highlightMode) hideHLTooltip();
+}
+
+function hideHLTooltip() {
+  const t = document.getElementById('hl-tooltip');
+  if (t) t.style.display = 'none';
 }
 
 document.addEventListener('mouseup', function(e) {
   const tooltip = document.getElementById('hl-tooltip');
-  if (tooltip.contains(e.target)) return;
-  if (!highlightMode) { tooltip.style.display = 'none'; return; }
+  if (tooltip && tooltip.contains(e.target)) return;
+  if (!highlightMode) { hideHLTooltip(); return; }
+
   const sel = window.getSelection();
-  if (sel && sel.toString().trim().length > 1 && !sel.isCollapsed) {
-    currentSelection = { sel: sel.toString().trim(), range: sel.getRangeAt(0).cloneRange() };
-    const rect = sel.getRangeAt(0).getBoundingClientRect();
-    tooltip.style.display = 'flex';
-    tooltip.style.top = (rect.bottom + window.scrollY + 10) + 'px';
-    tooltip.style.left = Math.max(4, Math.min(window.innerWidth - 220, rect.left + window.scrollX)) + 'px';
+  const txt = sel ? sel.toString().trim() : '';
+  if (txt.length > 1 && sel && !sel.isCollapsed) {
+    try {
+      const range = sel.getRangeAt(0);
+      // Only allow highlight within content-area
+      const ca = document.getElementById('content-area');
+      if (ca && ca.contains(range.commonAncestorContainer)) {
+        currentSel = { text: txt, range: range.cloneRange() };
+        const rect = range.getBoundingClientRect();
+        if (tooltip) {
+          tooltip.style.display = 'flex';
+          tooltip.style.position = 'fixed';
+          tooltip.style.top  = (rect.bottom + 10) + 'px';
+          tooltip.style.left = Math.max(4, Math.min(window.innerWidth - 230, rect.left)) + 'px';
+        }
+      }
+    } catch(err) { console.warn(err); }
   } else {
-    tooltip.style.display = 'none';
+    hideHLTooltip();
   }
 });
 
 function applyHighlight(color) {
-  if (!currentSelection) return;
-  const { range, sel } = currentSelection;
+  if (!currentSel) return;
+  const { text, range } = currentSel;
+
   try {
     const span = document.createElement('span');
-    const hlId = 'hl_' + Date.now();
-    span.className = 'highlighted-' + color;
-    span.setAttribute('data-hl-id', hlId);
-    span.setAttribute('data-hl-color', color);
-    span.title = 'Click to remove highlight';
-    span.style.cursor = 'pointer';
-    span.addEventListener('click', function(e) {
-      if (!highlightMode) return;
-      removeHighlightById(hlId);
-    });
+    const hid  = 'h' + Date.now();
+    span.className        = 'highlighted-' + color;
+    span.dataset.hlId     = hid;
+    span.dataset.hlColor  = color;
+    span.title            = 'Highlight — click to remove';
+    span.onclick          = () => { if (highlightMode) deleteHighlight(hid); };
     range.surroundContents(span);
 
-    // Save to storage
+    // persist
     if (!hlStore[currentPage]) hlStore[currentPage] = [];
-    hlStore[currentPage].push({ id: hlId, text: sel, color, ts: Date.now() });
-    LS.set('pt_highlights_v2', hlStore);
+    hlStore[currentPage].push({ id: hid, text, color });
+    LS.set('pt_hl', hlStore);
 
     window.getSelection().removeAllRanges();
-  } catch(err) {
-    // Complex range (crosses elements) — wrap what we can
-    console.warn('Highlight range error:', err);
+  } catch(e) {
+    console.warn('Could not wrap selection:', e);
+    // Fallback: just clear selection
+    window.getSelection().removeAllRanges();
   }
-  document.getElementById('hl-tooltip').style.display = 'none';
-  currentSelection = null;
+  hideHLTooltip();
+  currentSel = null;
 }
 
 function eraseHighlight() {
-  document.getElementById('hl-tooltip').style.display = 'none';
-  // Find highlighted span containing current selection
+  hideHLTooltip();
   const sel = window.getSelection();
-  if (sel && sel.anchorNode) {
-    let el = sel.anchorNode.parentElement;
-    while (el && !el.getAttribute?.('data-hl-id')) el = el.parentElement;
-    if (el && el.getAttribute('data-hl-id')) {
-      removeHighlightById(el.getAttribute('data-hl-id'));
-    }
-  }
-  currentSelection = null;
+  if (!sel || !sel.anchorNode) { currentSel = null; return; }
+  let el = sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentElement : sel.anchorNode;
+  while (el && !el.dataset?.hlId) el = el.parentElement;
+  if (el && el.dataset.hlId) deleteHighlight(el.dataset.hlId);
+  currentSel = null;
 }
 
-function removeHighlightById(hlId) {
-  const span = document.querySelector(`[data-hl-id="${hlId}"]`);
+function deleteHighlight(hid) {
+  const span = document.querySelector(`[data-hl-id="${hid}"]`);
   if (span) {
-    const parent = span.parentNode;
-    while (span.firstChild) parent.insertBefore(span.firstChild, span);
-    parent.removeChild(span);
+    const p = span.parentNode;
+    while (span.firstChild) p.insertBefore(span.firstChild, span);
+    p.removeChild(span);
   }
   if (hlStore[currentPage]) {
-    hlStore[currentPage] = hlStore[currentPage].filter(h => h.id !== hlId);
-    LS.set('pt_highlights_v2', hlStore);
+    hlStore[currentPage] = hlStore[currentPage].filter(h => h.id !== hid);
+    LS.set('pt_hl', hlStore);
   }
 }
 
-function restoreHighlights() {
-  // We use text-search based restore for robustness
-  const saved = (hlStore[currentPage] || []);
+function restoreHighlightsOnPage(pageId) {
+  const saved = hlStore[pageId] || [];
   if (!saved.length) return;
-  const page = document.getElementById('page-' + currentPage);
-  if (!page) return;
+  const pageEl = document.getElementById('page-' + pageId);
+  if (!pageEl) return;
 
-  saved.forEach(({ id: hlId, text, color }) => {
-    // Skip if already restored
-    if (page.querySelector(`[data-hl-id="${hlId}"]`)) return;
-    // Find text node containing the saved text
-    const walker = document.createTreeWalker(page, NodeFilter.SHOW_TEXT);
+  saved.forEach(({ id: hid, text, color }) => {
+    if (pageEl.querySelector(`[data-hl-id="${hid}"]`)) return; // already restored
+    // Walk text nodes to find the saved text
+    const walker = document.createTreeWalker(pageEl, NodeFilter.SHOW_TEXT, {
+      acceptNode: n => (n.parentElement.dataset?.hlId ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT)
+    });
     let node;
     while ((node = walker.nextNode())) {
       const idx = node.textContent.indexOf(text);
-      if (idx !== -1 && !node.parentElement.getAttribute?.('data-hl-id')) {
-        try {
-          const range = document.createRange();
-          range.setStart(node, idx);
-          range.setEnd(node, idx + text.length);
-          const span = document.createElement('span');
-          span.className = 'highlighted-' + color;
-          span.setAttribute('data-hl-id', hlId);
-          span.setAttribute('data-hl-color', color);
-          span.title = 'Click to remove highlight';
-          span.style.cursor = 'pointer';
-          span.addEventListener('click', function() { if (highlightMode) removeHighlightById(hlId); });
-          range.surroundContents(span);
-        } catch (e) {}
-        break;
-      }
+      if (idx === -1) continue;
+      try {
+        const r = document.createRange();
+        r.setStart(node, idx);
+        r.setEnd(node, idx + text.length);
+        const s = document.createElement('span');
+        s.className       = 'highlighted-' + color;
+        s.dataset.hlId    = hid;
+        s.dataset.hlColor = color;
+        s.title           = 'Highlight — click to remove';
+        s.onclick         = () => { if (highlightMode) deleteHighlight(hid); };
+        r.surroundContents(s);
+      } catch(e) {}
+      break;
     }
   });
 }
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════════
 // NOTES
-// ════════════════════════════════════════════
+// ════════════════════════════════════════
 function toggleNotes() {
   notesOpen = !notesOpen;
-  document.getElementById('notes-panel').classList.toggle('open', notesOpen);
-  document.getElementById('btn-notes').classList.toggle('active', notesOpen);
-  if (bookmarksOpen) closeBookmarks();
-  if (progressOpen) closeProgressPanel();
+  const panel = document.getElementById('notes-panel');
+  const btn   = document.getElementById('btn-notes');
+  if (panel) panel.classList.toggle('open', notesOpen);
+  if (btn)   btn.classList.toggle('active', notesOpen);
+  if (notesOpen) { closeBookmarks(false); closeProgressPanel(false); }
   renderNotes();
 }
 
 function renderNotes() {
   const list = document.getElementById('notes-list');
-  if (!notes.length) { list.innerHTML = '<div class="no-notes">এখনো কোনো নোট নেই।<br>নিচে নোট লিখুন।</div>'; return; }
+  if (!list) return;
+  if (!notes.length) {
+    list.innerHTML = '<div class="no-notes">এখনো কোনো নোট নেই।<br>নিচে লিখুন।</div>';
+    return;
+  }
   list.innerHTML = notes.map((n, i) => `
     <div class="note-item">
-      <div class="note-item-ref">📄 ${n.page || 'General'} · ${new Date(n.time).toLocaleDateString('bn-BD')}</div>
-      <div class="note-item-text">${n.text.replace(/\n/g,'<br>')}</div>
+      <div class="note-item-ref">📄 ${n.page || ''} · ${new Date(n.ts||Date.now()).toLocaleDateString()}</div>
+      <div class="note-item-text">${(n.text||'').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>
       <span class="note-item-del" onclick="deleteNote(${i})">✕ Delete</span>
     </div>`).join('');
 }
 
 function saveManualNote() {
-  const txt = document.getElementById('note-input').value.trim();
+  const inp = document.getElementById('note-input');
+  const txt = inp ? inp.value.trim() : '';
   if (!txt) return;
-  notes.push({ text: txt, page: currentPage, time: Date.now() });
+  notes.push({ text: txt, page: currentPage, ts: Date.now() });
   LS.set('pt_notes', notes);
-  document.getElementById('note-input').value = '';
+  if (inp) inp.value = '';
   renderNotes();
 }
 
@@ -2685,22 +2665,19 @@ function deleteNote(i) {
   renderNotes();
 }
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════════
 // BOOKMARKS
-// ════════════════════════════════════════════
+// ════════════════════════════════════════
 function addBookmark(id, title) {
-  const exists = bookmarks.findIndex(b => b.id === id);
-  if (exists >= 0) {
-    bookmarks.splice(exists, 1);
-  } else {
-    bookmarks.push({ id, title, page: currentPage, time: Date.now() });
-  }
+  const idx = bookmarks.findIndex(b => b.id === id);
+  if (idx >= 0) bookmarks.splice(idx, 1);
+  else bookmarks.push({ id, title, page: currentPage, ts: Date.now() });
   LS.set('pt_bookmarks', bookmarks);
-  updateAllBookmarkBtns();
+  syncBookmarkBtns();
   renderBookmarks();
 }
 
-function updateAllBookmarkBtns() {
+function syncBookmarkBtns() {
   document.querySelectorAll('.bookmark-btn').forEach(btn => {
     const m = (btn.getAttribute('onclick') || '').match(/'([^']+)'/);
     if (m) btn.classList.toggle('bookmarked', bookmarks.some(b => b.id === m[1]));
@@ -2709,240 +2686,295 @@ function updateAllBookmarkBtns() {
 
 function renderBookmarks() {
   const list = document.getElementById('bookmarks-list');
-  if (!bookmarks.length) { list.innerHTML = '<div class="no-notes">কোনো bookmark নেই।<br>Section-এর 🔖 click করুন।</div>'; return; }
+  if (!list) return;
+  if (!bookmarks.length) {
+    list.innerHTML = '<div class="no-notes">Bookmark নেই।<br>Section-এর 🔖 click করুন।</div>';
+    return;
+  }
   list.innerHTML = bookmarks.map(b => `
-    <div class="bm-item" onclick="showPage('${b.page}'); scrollToSection('${b.id}'); closeBookmarks();">
+    <div class="bm-item" onclick="showPage('${b.page}'); jumpTo('${b.id}'); closeBookmarks();">
       <div class="bm-item-title">🔖 ${b.title}</div>
-      <div class="bm-item-loc">${b.page.replace('ch','Chapter ').replace('front','Front Matter')}</div>
+      <div class="bm-item-loc">${(b.page||'').replace('ch','Chapter ').replace('front','Front Matter')}</div>
     </div>`).join('');
 }
 
 function toggleBookmarks() {
   bookmarksOpen = !bookmarksOpen;
-  document.getElementById('bookmarks-panel').classList.toggle('open', bookmarksOpen);
-  document.getElementById('btn-bookmarks').classList.toggle('active', bookmarksOpen);
-  if (notesOpen) toggleNotes();
-  if (progressOpen) closeProgressPanel();
+  const p = document.getElementById('bookmarks-panel');
+  const b = document.getElementById('btn-bookmarks');
+  if (p) p.classList.toggle('open', bookmarksOpen);
+  if (b) b.classList.toggle('active', bookmarksOpen);
+  if (bookmarksOpen) { if (notesOpen) toggleNotes(); closeProgressPanel(false); }
   renderBookmarks();
 }
-function closeBookmarks() {
-  bookmarksOpen = false;
-  document.getElementById('bookmarks-panel').classList.remove('open');
-  document.getElementById('btn-bookmarks').classList.remove('active');
+function closeBookmarks(updateState=true) {
+  if (updateState) bookmarksOpen = false;
+  const p = document.getElementById('bookmarks-panel');
+  const b = document.getElementById('btn-bookmarks');
+  if (p) p.classList.remove('open');
+  if (b) b.classList.remove('active');
 }
 
-// ════════════════════════════════════════════
-// READING PROGRESS TRACKER
-// ════════════════════════════════════════════
-function toggleSection(sectionId) {
-  const idx = completedSections.indexOf(sectionId);
-  if (idx >= 0) completedSections.splice(idx, 1);
-  else completedSections.push(sectionId);
-  LS.set('pt_completed', completedSections);
-  updateSectionCompletionUI();
-  renderProgressPanel();
+// ════════════════════════════════════════
+// SECTION PROGRESS TRACKER
+// ════════════════════════════════════════
+function toggleSection(sid) {
+  const i = completedSecs.indexOf(sid);
+  if (i >= 0) completedSecs.splice(i, 1);
+  else completedSecs.push(sid);
+  LS.set('pt_completed', completedSecs);
+  updateMarkDoneButtons();
   updateProgressBadge();
+  if (progressOpen) renderProgressPanel();
 }
 
-function updateSectionCompletionUI() {
+function updateMarkDoneButtons() {
   document.querySelectorAll('.section-complete-btn').forEach(btn => {
-    const sid = btn.getAttribute('data-sid');
-    const done = completedSections.includes(sid);
+    const sid = btn.dataset.sid;
+    if (!sid) return;
+    const done = completedSecs.includes(sid);
     btn.classList.toggle('done', done);
     btn.textContent = done ? '✅ Done' : '○ Mark Done';
-    btn.title = done ? 'Click to unmark' : 'Mark as read';
   });
 }
 
 function updateProgressBadge() {
-  const total = ALL_SECTIONS.length;
-  const done = completedSections.length;
-  const pct = Math.round((done / total) * 100);
   const badge = document.getElementById('progress-badge');
-  if (badge) { badge.textContent = pct + '%'; badge.style.background = pct === 100 ? 'var(--green)' : 'var(--accent2)'; }
-}
-
-function openProgressPanel() {
-  progressOpen = true;
-  let panel = document.getElementById('progress-panel');
-  if (!panel) buildProgressPanel();
-  document.getElementById('progress-panel').classList.add('open');
-  document.getElementById('btn-progress').classList.add('active');
-  if (notesOpen) toggleNotes();
-  if (bookmarksOpen) closeBookmarks();
-  renderProgressPanel();
-}
-
-function closeProgressPanel() {
-  progressOpen = false;
-  const p = document.getElementById('progress-panel');
-  if (p) p.classList.remove('open');
-  const b = document.getElementById('btn-progress');
-  if (b) b.classList.remove('active');
+  if (!badge) return;
+  const pct = Math.round((completedSecs.length / SECTIONS.length) * 100);
+  badge.textContent = pct + '%';
+  badge.style.background = pct === 100 ? 'var(--green)' : (pct > 50 ? 'var(--accent2)' : 'var(--accent2)');
 }
 
 function toggleProgressPanel() {
   progressOpen ? closeProgressPanel() : openProgressPanel();
 }
-
-function buildProgressPanel() {
-  const panel = document.createElement('div');
-  panel.id = 'progress-panel';
-  panel.innerHTML = `
-    <div id="notes-header" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)">
-      <h3 style="font-size:13px;font-weight:700;color:var(--text);font-family:var(--font-en)">📊 Reading Progress</h3>
-      <button class="tool-btn" onclick="closeProgressPanel()">✕</button>
-    </div>
-    <div id="progress-panel-body" style="flex:1;overflow-y:auto;padding:12px;"></div>
-  `;
-  panel.style.cssText = `position:fixed;right:0;top:calc(var(--topbar-h) + 3px);bottom:0;width:300px;background:var(--bg2);border-left:1px solid var(--border);z-index:60;transform:translateX(100%);transition:transform 0.25s;display:flex;flex-direction:column;`;
-  document.body.appendChild(panel);
-  // Add open style
-  const style = document.createElement('style');
-  style.textContent = '#progress-panel.open{transform:translateX(0)!important}';
-  document.head.appendChild(style);
+function openProgressPanel() {
+  progressOpen = true;
+  let panel = document.getElementById('pg-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'pg-panel';
+    panel.style.cssText = 'position:fixed;right:0;top:59px;bottom:0;width:300px;background:var(--bg2);border-left:1px solid var(--border);z-index:61;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s;overflow:hidden';
+    panel.innerHTML = `
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <span style="font-size:13px;font-weight:700;color:var(--text);font-family:var(--font-en)">📊 Reading Progress</span>
+        <button class="tool-btn" onclick="closeProgressPanel()">✕</button>
+      </div>
+      <div id="pg-body" style="flex:1;overflow-y:auto;padding:14px"></div>`;
+    document.body.appendChild(panel);
+  }
+  requestAnimationFrame(() => { panel.style.transform = 'translateX(0)'; });
+  const btn = document.getElementById('btn-progress');
+  if (btn) btn.classList.add('active');
+  if (notesOpen) toggleNotes();
+  closeBookmarks(false);
+  renderProgressPanel();
+}
+function closeProgressPanel(updateState=true) {
+  if (updateState) progressOpen = false;
+  const panel = document.getElementById('pg-panel');
+  if (panel) panel.style.transform = 'translateX(100%)';
+  const btn = document.getElementById('btn-progress');
+  if (btn) btn.classList.remove('active');
 }
 
 function renderProgressPanel() {
-  const body = document.getElementById('progress-panel-body');
+  const body = document.getElementById('pg-body');
   if (!body) return;
-  const total = ALL_SECTIONS.length;
-  const done = completedSections.length;
-  const pct = Math.round((done / total) * 100);
+  const total = SECTIONS.length;
+  const done  = completedSecs.length;
+  const pct   = Math.round((done / total) * 100);
 
   // Group by chapter
-  const chapters = {};
-  ALL_SECTIONS.forEach(s => {
-    if (!chapters[s.ch]) chapters[s.ch] = [];
-    chapters[s.ch].push(s);
-  });
-
-  const chLabels = { front:'Front Matter', ch1:'Chapter 1', ch2:'Chapter 2', ch3:'Chapter 3' };
+  const groups = {};
+  SECTIONS.forEach(s => { (groups[s.ch] = groups[s.ch]||[]).push(s); });
+  const chNames = { front:'Front Matter', ch1:'Chapter 1', ch2:'Chapter 2', ch3:'Chapter 3' };
 
   body.innerHTML = `
-    <div style="margin-bottom:16px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-size:12px;color:var(--text2);font-family:var(--font-en)">Overall Progress</span>
-        <span style="font-size:13px;font-weight:700;color:var(--accent);font-family:var(--font-en)">${done}/${total} · ${pct}%</span>
+    <div style="margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:12px;color:var(--text2);font-family:var(--font-en)">Overall</span>
+        <span style="font-size:13px;font-weight:700;color:var(--accent);font-family:var(--font-en)">${done}/${total} (${pct}%)</span>
       </div>
-      <div style="background:var(--bg4);border-radius:8px;height:10px;overflow:hidden">
-        <div style="height:100%;background:linear-gradient(90deg,var(--accent2),var(--green));width:${pct}%;transition:width 0.4s;border-radius:8px"></div>
+      <div style="background:var(--bg4);border-radius:8px;height:12px;overflow:hidden">
+        <div style="height:100%;background:linear-gradient(90deg,var(--accent2),var(--green));width:${pct}%;transition:width .4s;border-radius:8px"></div>
       </div>
     </div>
-    ${Object.entries(chapters).map(([ch, secs]) => {
-      const chDone = secs.filter(s => completedSections.includes(s.id)).length;
-      const chPct = Math.round((chDone/secs.length)*100);
+    ${Object.entries(groups).map(([ch, secs]) => {
+      const cdone = secs.filter(s => completedSecs.includes(s.id)).length;
+      const cpct  = Math.round(cdone/secs.length*100);
       return `
-      <div style="margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;cursor:pointer" onclick="showPage('${ch}')">
-          <span style="font-size:12px;font-weight:700;color:var(--text);font-family:var(--font-en)">${chLabels[ch]||ch}</span>
-          <span style="font-size:11px;color:${chPct===100?'var(--green)':'var(--text3)'};font-family:var(--font-en)">${chDone}/${secs.length}</span>
+      <div style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;cursor:pointer" onclick="showPage('${ch}')">
+          <span style="font-size:12px;font-weight:700;color:var(--text);font-family:var(--font-en)">${chNames[ch]||ch}</span>
+          <span style="font-size:11px;color:${cpct===100?'var(--green)':'var(--text3)'};font-family:var(--font-en)">${cdone}/${secs.length}</span>
         </div>
-        <div style="background:var(--bg4);border-radius:4px;height:4px;margin-bottom:8px;overflow:hidden">
-          <div style="height:100%;background:${chPct===100?'var(--green)':'var(--accent2)'};width:${chPct}%;transition:width 0.3s"></div>
+        <div style="background:var(--bg4);border-radius:4px;height:4px;margin-bottom:8px">
+          <div style="height:100%;background:${cpct===100?'var(--green)':'var(--accent2)'};width:${cpct}%;border-radius:4px;transition:width .3s"></div>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:4px">
-          ${secs.map(s => `
-            <span onclick="showPage('${s.ch}');scrollToSection('${s.id}')" style="font-size:10px;padding:3px 7px;border-radius:4px;cursor:pointer;font-family:var(--font-en);border:1px solid ${completedSections.includes(s.id)?'var(--green)':'var(--border)'};background:${completedSections.includes(s.id)?'var(--green-bg)':'var(--bg3)'};color:${completedSections.includes(s.id)?'var(--green)':'var(--text3)'};transition:all 0.15s" title="${s.label}">
-              ${completedSections.includes(s.id)?'✓ ':''}${s.label}
-            </span>`).join('')}
+          ${secs.map(s => {
+            const ok = completedSecs.includes(s.id);
+            return `<span onclick="showPage('${s.ch}');jumpTo('${s.id}')" style="cursor:pointer;font-size:10px;padding:2px 7px;border-radius:4px;font-family:var(--font-en);border:1px solid ${ok?'var(--green)':'var(--border)'};background:${ok?'var(--green-bg)':'var(--bg3)'};color:${ok?'var(--green)':'var(--text3)'}">${ok?'✓ ':''}${s.label}</span>`;
+          }).join('')}
         </div>
-      </div>`; }).join('')}
-    <button onclick="if(confirm('সব progress reset করবেন?')){completedSections=[];LS.set('pt_completed',[]);updateSectionCompletionUI();renderProgressPanel();updateProgressBadge();}" style="width:100%;padding:8px;background:var(--red-bg);color:var(--red);border:1px solid var(--red);border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--font-en);margin-top:8px">🗑 Reset Progress</button>
+      </div>`;
+    }).join('')}
+    <button onclick="if(confirm('সব progress reset করবেন?')){completedSecs=[];LS.set('pt_completed',[]);updateMarkDoneButtons();updateProgressBadge();renderProgressPanel();}" style="width:100%;margin-top:4px;padding:8px;background:var(--red-bg);color:var(--red);border:1px solid var(--red);border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--font-en)">🗑 Reset All Progress</button>
   `;
 }
 
-// ════════════════════════════════════════════
-// CHECKLIST — persisted per page
-// ════════════════════════════════════════════
-let checklistState = LS.get('pt_checklists', {});
-
+// ════════════════════════════════════════
+// CHECKLIST — saved per page
+// ════════════════════════════════════════
 function toggleCheck(el) {
   el.classList.toggle('checked');
   const li = el.closest('li');
   if (li) li.classList.toggle('checked-item', el.classList.contains('checked'));
-  // Save state
-  const allChecks = document.querySelectorAll('.cl-check');
-  const state = {};
-  allChecks.forEach((c, i) => { state[i] = c.classList.contains('checked'); });
-  if (!checklistState[currentPage]) checklistState[currentPage] = {};
-  checklistState[currentPage] = state;
-  LS.set('pt_checklists', checklistState);
+  saveChecklistState();
 }
 
-function restoreChecklists() {
-  const state = checklistState[currentPage] || {};
-  const allChecks = document.querySelectorAll('.cl-check');
-  allChecks.forEach((c, i) => {
+function saveChecklistState() {
+  const state = {};
+  document.querySelectorAll(`#page-${currentPage} .cl-check`).forEach((c, i) => {
+    state[i] = c.classList.contains('checked');
+  });
+  clState[currentPage] = state;
+  LS.set('pt_cl', clState);
+}
+
+function restoreChecklistsOnPage(pageId) {
+  const state = clState[pageId] || {};
+  document.querySelectorAll(`#page-${pageId} .cl-check`).forEach((c, i) => {
     if (state[i]) {
       c.classList.add('checked');
       const li = c.closest('li');
       if (li) li.classList.add('checked-item');
+    } else {
+      c.classList.remove('checked');
+      const li = c.closest('li');
+      if (li) li.classList.remove('checked-item');
     }
   });
 }
 
-// ── SEARCH ──
-const searchIndex = [
-  { page: 'front', title: 'ভূমিকা — Preface', id: 'preface', content: 'penetration testing mindset ethical hacker authorized' },
-  { page: 'front', title: 'Lab Environment Setup', id: 'lab-setup', content: 'kali linux vmware virtualbox metasploitable dvwa setup lab' },
-  { page: 'ch1', title: '1.1 What is Penetration Testing', id: 's1-1', content: 'penetration testing pentest authorized simulated attack hacking ethical' },
-  { page: 'ch1', title: '1.2 Benefits of Pentesting', id: 's1-2', content: 'benefits ROI compliance PCI DSS ISO 27001 SOC' },
-  { page: 'ch1', title: '1.3 Service Delivery Model', id: 's1-3', content: 'onsite remote hybrid delivery model pros cons' },
-  { page: 'ch1', title: '1.4 ROI Calculation', id: 's1-4', content: 'ROI return on investment cost benefit analysis breach loss' },
-  { page: 'ch1', title: '1.5 Assessment Types', id: 's1-5', content: 'black box white box grey box assessment type comparison' },
-  { page: 'ch1', title: '1.6 Strategies', id: 's1-6', content: 'external internal targeted blind double blind strategy' },
-  { page: 'ch1', title: '1.7 Cost & Comprehensiveness', id: 's1-7', content: 'cost pricing BDT scope web app network AD red team' },
-  { page: 'ch1', title: '1.8 Automated vs Manual', id: 's1-8', content: 'automated manual nessus openvas false positive context' },
-  { page: 'ch1', title: '1.9 Common Areas', id: 's1-9', content: 'network web app mobile social engineering cloud physical red team' },
-  { page: 'ch1', title: '1.10 Pentest Process', id: 's1-10', content: 'process pre-engagement recon scanning exploitation post report cleanup' },
-  { page: 'ch1', title: '1.11 Phases', id: 's1-11', content: 'phases reconnaissance scanning exploitation post-exploitation reporting cleanup' },
-  { page: 'ch1', title: '1.12 Methodologies', id: 's1-12', content: 'PTES OWASP NIST MITRE ATT&CK OSSTMM methodology' },
-  { page: 'ch1', title: '1.13 When to Test', id: 's1-13', content: 'annual after breach major changes regulatory product launch' },
-  { page: 'ch1', title: '1.14 Ethics', id: 's1-14', content: 'ethics authorization confidentiality harm truthful reporting' },
-  { page: 'ch1', title: '1.15 Qualifications', id: 's1-15', content: 'OSCP CEH CPTS PNPT certification roadmap skills networking python' },
-  { page: 'ch1', title: '1.16 Risks', id: 's1-16', content: 'risk system crash data loss false security scope creep legal' },
-  { page: 'ch2', title: '2.1 Bangladesh Laws', id: 's2-1', content: 'Bangladesh DSA digital security act ICT act Bangladesh Bank cybersecurity framework' },
-  { page: 'ch2', title: '2.2 US Laws', id: 's2-2', content: 'United States CFAA HIPAA GLBA PCI DSS CCPA state laws' },
-  { page: 'ch2', title: '2.3 GDPR', id: 's2-3', content: 'GDPR EU general data protection regulation consent fine principles' },
-  { page: 'ch2', title: '2.4 UK Laws', id: 's2-4', content: 'UK GDPR DPA 2018 computer misuse act CREST ICO' },
-  { page: 'ch2', title: '2.5 India DPDP Act', id: 's2-5', content: 'India DPDP digital personal data protection IT act 2000 section 66' },
-  { page: 'ch2', title: '2.6 China PIPL CSL', id: 's2-6', content: 'China PIPL CSL DSL cybersecurity personal information cross-border' },
-  { page: 'ch3', title: '3.1 Pre-engagement Activities', id: 's3-1', content: 'pre-engagement NDA checklist kick-off planning activities before testing' },
-  { page: 'ch3', title: '3.2 Proposal & RFP', id: 's3-2', content: 'RFP request for proposal submission template fixed price time materials' },
-  { page: 'ch3', title: '3.3 Scoping Meeting', id: 's3-3', content: 'scoping meeting agenda template questions infrastructure logistics' },
-  { page: 'ch3', title: '3.4 Questionnaires', id: 's3-4', content: 'questionnaire client pre-engagement questions network web app AD wireless' },
-  { page: 'ch3', title: '3.5 Assessment Types', id: 's3-5', content: 'assessment type black white grey box identify confirm recommend' },
-  { page: 'ch3', title: '3.6 Testing Strategy', id: 's3-6', content: 'testing strategy targeted blind double-blind lights on off' },
-  { page: 'ch3', title: '3.7 Infrastructure Areas', id: 's3-7', content: 'infrastructure areas scope definition IP ranges domains applications in-scope' },
-  { page: 'ch3', title: '3.8 Out-of-Scope', id: 's3-8', content: 'out of scope tests not to perform DoS destructive social engineering exclusions' },
-  { page: 'ch3', title: '3.9 Deliverables', id: 's3-9', content: 'deliverables executive report technical report vulnerability matrix retest attestation' },
-  { page: 'ch3', title: '3.10 Reports', id: 's3-10', content: 'reports executive technical draft final retest attestation letter format' },
-  { page: 'ch3', title: '3.11 Test Duration', id: 's3-11', content: 'test duration timeline days weeks web app network red team reporting time' },
-  { page: 'ch3', title: '3.12 Team Staffing', id: 's3-12', content: 'team staffing lead pentester junior project manager specialist role' },
-  { page: 'ch3', title: '3.13 Cost Estimation', id: 's3-13', content: 'cost estimation worksheet man-days daily rate pricing margin payment terms BDT' },
-  { page: 'ch3', title: '3.14 Proposal Submission', id: 's3-14', content: 'proposal submission checklist review pricing timeline qualifications legal' },
-  { page: 'ch3', title: '3.15 TMTT Brainstorming', id: 's3-15', content: 'TMTT test manager team brainstorming attack surface tool selection role division threat model' },
-  { page: 'ch3', title: '3.16 Communication Lines', id: 's3-16', content: 'communication plan POC emergency contact daily update encrypted critical finding notify' },
-  { page: 'ch3', title: '3.17 Kick-off Call TPC', id: 's3-17', content: 'TPC teleconference kick-off call agenda scope confirmation whitelisting credentials' },
-  { page: 'ch3', title: '3.18 Project Timeline', id: 's3-18', content: 'project timeline gantt chart testing reporting retest phases days schedule' },
-  { page: 'ch3', title: '3.19 Meeting Frequency', id: 's3-19', content: 'meeting frequency daily weekly check-in critical finding debrief retest' },
-  { page: 'ch3', title: '3.20 Time of Day', id: 's3-20', content: 'time of day business hours after hours night weekend Bangladesh Friday Ramadan' },
-  { page: 'ch3', title: '3.21 Support Personnel', id: 's3-21', content: 'support personnel network admin system admin developer DBA CISO legal assistance' },
-  { page: 'ch3', title: '3.22 Rules of Engagement ROE', id: 's3-22', content: 'ROE rules of engagement document template authorized systems prohibited methods emergency stop signatures' },
-  { page: 'ch3', title: '3.23 Engagement Letter', id: 's3-23', content: 'engagement letter client letterhead authorization get out of jail card printed copy' },
+// ════════════════════════════════════════
+// FOCUS MODE
+// ════════════════════════════════════════
+function toggleFocus() {
+  focusActive = !focusActive;
+  const btn = document.getElementById('btn-focus');
+  if (btn) btn.classList.toggle('active', focusActive);
+  LS.set('pt_focus', focusActive);
+  const page = document.getElementById('page-' + currentPage);
+  if (!page) return;
+  const targets = page.querySelectorAll('p, li, tr');
+  if (focusActive) {
+    targets.forEach(el => { el.classList.add('focus-dim'); });
+    targets.forEach(el => {
+      el._fIn  = () => { el.classList.remove('focus-dim'); el.classList.add('focus-bright'); };
+      el._fOut = () => { el.classList.remove('focus-bright'); el.classList.add('focus-dim'); };
+      el.addEventListener('mouseenter', el._fIn);
+      el.addEventListener('mouseleave', el._fOut);
+    });
+  } else {
+    targets.forEach(el => {
+      el.classList.remove('focus-dim','focus-bright');
+      if (el._fIn)  el.removeEventListener('mouseenter', el._fIn);
+      if (el._fOut) el.removeEventListener('mouseleave', el._fOut);
+    });
+  }
+}
+
+// ════════════════════════════════════════
+// COPY CODE
+// ════════════════════════════════════════
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  const txt = pre ? pre.innerText : '';
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(txt).then(() => flashCopied(btn));
+  } else {
+    const t = document.createElement('textarea');
+    t.value = txt; document.body.appendChild(t); t.select();
+    document.execCommand('copy'); document.body.removeChild(t);
+    flashCopied(btn);
+  }
+}
+function flashCopied(btn) {
+  btn.textContent = '✓ Copied!'; btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+}
+
+// ════════════════════════════════════════
+// SEARCH
+// ════════════════════════════════════════
+const SEARCH_IDX = [
+  {page:'front',title:'ভূমিকা — Preface',id:'preface',body:'penetration testing mindset ethical hacker authorized lab'},
+  {page:'front',title:'Lab Setup',id:'lab-setup',body:'kali linux vmware virtualbox metasploitable dvwa docker'},
+  {page:'ch1',title:'1.1 What is Pentest',id:'s1-1',body:'penetration testing authorized simulated attack hacking ethical'},
+  {page:'ch1',title:'1.2 Benefits',id:'s1-2',body:'benefits ROI compliance PCI DSS ISO SOC case study'},
+  {page:'ch1',title:'1.3 Delivery Models',id:'s1-3',body:'onsite remote hybrid delivery model'},
+  {page:'ch1',title:'1.4 ROI',id:'s1-4',body:'ROI return investment cost breach loss'},
+  {page:'ch1',title:'1.5 Assessment Types',id:'s1-5',body:'black box white box grey box assessment'},
+  {page:'ch1',title:'1.6 Strategies',id:'s1-6',body:'external internal blind double-blind targeted strategy'},
+  {page:'ch1',title:'1.7 Cost',id:'s1-7',body:'cost pricing BDT scope web network AD red team'},
+  {page:'ch1',title:'1.8 Auto vs Manual',id:'s1-8',body:'automated manual nessus openvas false positive'},
+  {page:'ch1',title:'1.9 Common Areas',id:'s1-9',body:'network web app mobile social engineering cloud physical'},
+  {page:'ch1',title:'1.10 Process',id:'s1-10',body:'process recon scanning exploitation post report cleanup'},
+  {page:'ch1',title:'1.11 Phases',id:'s1-11',body:'phases pre-engagement recon scan exploit post report cleanup'},
+  {page:'ch1',title:'1.12 Methodologies',id:'s1-12',body:'PTES OWASP NIST MITRE ATT&CK OSSTMM'},
+  {page:'ch1',title:'1.13 When to Test',id:'s1-13',body:'annual breach major changes regulatory launch'},
+  {page:'ch1',title:'1.14 Ethics',id:'s1-14',body:'ethics authorization confidentiality harm truthful'},
+  {page:'ch1',title:'1.15 Qualifications',id:'s1-15',body:'OSCP CEH CPTS PNPT certification skills python'},
+  {page:'ch1',title:'1.16 Risks',id:'s1-16',body:'risk crash data loss scope creep legal'},
+  {page:'ch2',title:'2.1 Bangladesh',id:'s2-1',body:'Bangladesh DSA ICT act Bangladesh Bank cybersecurity'},
+  {page:'ch2',title:'2.2 US Laws',id:'s2-2',body:'CFAA HIPAA GLBA PCI DSS CCPA state laws'},
+  {page:'ch2',title:'2.3 GDPR',id:'s2-3',body:'GDPR EU general data protection regulation fine'},
+  {page:'ch2',title:'2.4 UK',id:'s2-4',body:'UK GDPR DPA 2018 computer misuse act CREST ICO'},
+  {page:'ch2',title:'2.5 India DPDP',id:'s2-5',body:'India DPDP digital personal data protection IT act'},
+  {page:'ch2',title:'2.6 China PIPL',id:'s2-6',body:'China PIPL CSL DSL cybersecurity cross-border'},
+  {page:'ch3',title:'3.1 Pre-engagement',id:'s3-1',body:'pre-engagement NDA checklist planning'},
+  {page:'ch3',title:'3.2 Proposal RFP',id:'s3-2',body:'RFP proposal submission template fixed time materials'},
+  {page:'ch3',title:'3.3 Scoping Meeting',id:'s3-3',body:'scoping meeting agenda template questions'},
+  {page:'ch3',title:'3.4 Questionnaires',id:'s3-4',body:'questionnaire client questions network web app AD'},
+  {page:'ch3',title:'3.5 Assessment Type',id:'s3-5',body:'assessment type black white grey recommend'},
+  {page:'ch3',title:'3.6 Strategy',id:'s3-6',body:'strategy targeted blind double-blind'},
+  {page:'ch3',title:'3.7 Infrastructure',id:'s3-7',body:'infrastructure scope IP ranges domains applications'},
+  {page:'ch3',title:'3.8 Out-of-Scope',id:'s3-8',body:'out scope DoS destructive social engineering exclusions'},
+  {page:'ch3',title:'3.9 Deliverables',id:'s3-9',body:'deliverables executive technical report retest attestation'},
+  {page:'ch3',title:'3.10 Reports',id:'s3-10',body:'reports executive technical draft final retest'},
+  {page:'ch3',title:'3.11 Duration',id:'s3-11',body:'duration timeline days weeks reporting time'},
+  {page:'ch3',title:'3.12 Staffing',id:'s3-12',body:'team staffing lead junior project manager specialist'},
+  {page:'ch3',title:'3.13 Cost Estimate',id:'s3-13',body:'cost estimation worksheet daily rate BDT pricing'},
+  {page:'ch3',title:'3.14 Proposal Submit',id:'s3-14',body:'proposal submission checklist review pricing legal'},
+  {page:'ch3',title:'3.15 TMTT',id:'s3-15',body:'TMTT brainstorming attack surface threat model'},
+  {page:'ch3',title:'3.16 Communication',id:'s3-16',body:'communication POC emergency contact daily update'},
+  {page:'ch3',title:'3.17 Kick-off TPC',id:'s3-17',body:'TPC kick-off call agenda whitelisting credentials'},
+  {page:'ch3',title:'3.18 Timeline',id:'s3-18',body:'timeline gantt testing reporting retest schedule'},
+  {page:'ch3',title:'3.19 Meetings',id:'s3-19',body:'meeting frequency weekly daily debrief retest'},
+  {page:'ch3',title:'3.20 Time of Day',id:'s3-20',body:'time business hours night weekend Bangladesh Friday'},
+  {page:'ch3',title:'3.21 Personnel',id:'s3-21',body:'personnel network admin DBA CISO legal assistance'},
+  {page:'ch3',title:'3.22 ROE',id:'s3-22',body:'ROE rules engagement authorized prohibited emergency signatures'},
+  {page:'ch3',title:'3.23 Engagement Letter',id:'s3-23',body:'engagement letter authorization get out of jail printed'},
 ];
 
 function openSearch() {
-  document.getElementById('search-box').classList.add('open');
-  document.getElementById('search-overlay').classList.add('open');
-  document.getElementById('search-input').focus();
+  const box = document.getElementById('search-box');
+  const ov  = document.getElementById('search-overlay');
+  if (box) box.classList.add('open');
+  if (ov)  ov.classList.add('open');
+  const inp = document.getElementById('search-input');
+  if (inp) setTimeout(() => inp.focus(), 50);
 }
 function closeSearch() {
-  document.getElementById('search-box').classList.remove('open');
-  document.getElementById('search-overlay').classList.remove('open');
-  document.getElementById('search-input').value = '';
-  document.getElementById('search-results').innerHTML = '<div id="search-empty">কিছু টাইপ করুন...</div>';
+  document.getElementById('search-box')?.classList.remove('open');
+  document.getElementById('search-overlay')?.classList.remove('open');
+  const inp = document.getElementById('search-input');
+  if (inp) inp.value = '';
+  const res = document.getElementById('search-results');
+  if (res) res.innerHTML = '<div id="search-empty">কিছু টাইপ করুন...</div>';
 }
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
@@ -2951,40 +2983,51 @@ document.addEventListener('keydown', e => {
 
 function doSearch(q) {
   const res = document.getElementById('search-results');
+  if (!res) return;
   if (!q || q.length < 2) { res.innerHTML = '<div id="search-empty">কিছু টাইপ করুন...</div>'; return; }
-  const lower = q.toLowerCase();
-  const matches = searchIndex.filter(item =>
-    item.title.toLowerCase().includes(lower) || item.content.toLowerCase().includes(lower)
-  );
-  if (matches.length === 0) { res.innerHTML = '<div id="search-empty">কোনো result পাওয়া যায়নি।</div>'; return; }
-  res.innerHTML = matches.slice(0, 10).map(m => {
-    const snippet = m.content.toLowerCase().includes(lower)
-      ? '...' + m.content.replace(new RegExp(q, 'gi'), `<mark>${q}</mark>`).substring(0, 120) + '...'
-      : '';
-    return `<div class="search-result-item" onclick="showPage('${m.page}'); scrollTo('${m.id}'); closeSearch();">
-      <div class="search-result-title">${m.title.replace(new RegExp(q, 'gi'), `<mark>${q}</mark>`)}</div>
-      <div class="search-result-snippet">${snippet}</div>
+  const lo = q.toLowerCase();
+  const hits = SEARCH_IDX.filter(x => x.title.toLowerCase().includes(lo) || x.body.toLowerCase().includes(lo));
+  if (!hits.length) { res.innerHTML = '<div id="search-empty">কোনো result নেই।</div>'; return; }
+  res.innerHTML = hits.slice(0, 12).map(m => {
+    const hl = s => s.replace(new RegExp(q,'gi'), t => `<mark>${t}</mark>`);
+    return `<div class="search-result-item" onclick="showPage('${m.page}');jumpTo('${m.id}');closeSearch()">
+      <div class="search-result-title">${hl(m.title)}</div>
+      <div class="search-result-snippet">${hl(m.body.substring(0,100))}…</div>
     </div>`;
   }).join('');
 }
 
-// ════════════════════════════════════════════
-// INIT — restore all state on load
-// ════════════════════════════════════════════
+// ════════════════════════════════════════
+// INIT — runs once DOM is ready
+// ════════════════════════════════════════
 (function init() {
-  // Show last visited page
+  // 1. Font size
+  applyFontSize(fontSize);
+
+  // 2. Theme
+  const theme = LS.get('pt_theme', 'dark');
+  document.documentElement.setAttribute('data-theme', theme);
+
+  // 3. Sidebar state
+  if (LS.get('pt_sidebar', false)) {
+    document.getElementById('sidebar')?.classList.add('collapsed');
+    document.getElementById('main')?.classList.add('expanded');
+  }
+
+  // 4. Show last page (triggers highlight/checklist restore)
   showPage(currentPage);
 
-  // Restore all tool states
+  // 5. Sync all UI
+  syncBookmarkBtns();
   renderNotes();
   renderBookmarks();
-  updateProgress();
   updateProgressBadge();
-  updateAllBookmarkBtns();
-  updateSectionCompletionUI();
+  updateScrollBar();
 
-  // Restore focus mode if was active
-  if (LS.get('pt_focus', false)) toggleFocus();
+  // 6. Re-apply focus mode if it was on
+  if (LS.get('pt_focus', false)) {
+    setTimeout(toggleFocus, 200);
+  }
 })();
 </script>
 </body>
